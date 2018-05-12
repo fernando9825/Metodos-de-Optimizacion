@@ -1,1 +1,2 @@
-# Metodos-de-Optimizacion
+# Métodos de optimización
+Método simplex
