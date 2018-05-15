@@ -37,9 +37,16 @@ public class MetodoSimplex {
                 {0, 2, 5, 0, 1, 0, 30},
                 {4, 4, 0, 0, 0, 1, 24},
                 {-5, -8, -7, 0, 0, 0, 0} //Función objetivo
-        };
-        
+        }; 
          */
+        //Variables para el paso 4 (que está más adelante).
+        /*
+            0 - El usuario no ha decidido si es un problema de MAX o MIN.
+            1 - Problema de Maximización
+            2 - Problema de Minización
+         */
+        int MAXMIN = 1; //MAX
+
         //Restricciones
         double[] fObjetivo = {5, 8, 7};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
         double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
@@ -57,6 +64,7 @@ public class MetodoSimplex {
          */
         //CONVIRTIENDO LAS RESTRICCIONES EN IGUALDADES, AGREGANDO UNA VARIABLE DE HOLGURA (PROBLEMA CON <=)
         double[][] igualdades = new double[(array.length + 1)][2 * (array.length) + 1];
+        int[] varBaseX = new int[array.length];
 
         for (int i = 0; i < array.length; i++) { //Se recorre la matriz original (con restricciones)
 
@@ -137,6 +145,269 @@ public class MetodoSimplex {
             "igualdades".
          */
         //System.out.println("VB     X1        X2        X3        X4        X5        X6        Bi");
+        mostrarMatriz(igualdades, variablesBasicasPosI, variablesBasicasPosJ, varBaseX);
+
+        
+        
+        /*
+            PASO 3:  Determine la solución básica factible inicial. 
+            Se seleccionan las variables holgura como variables de base inicial.
+        
+            Aquí se imprime la solución básica inicial, recorriendo la matriz 
+            igualdades, donde se encuentren los valores 1.0 en la intersección
+            de fila-columna, eso nos indica que la variable esta en la base.
+         */
+
+        //Obtenemos el valor Bi de Z
+        double Z = igualdades[(igualdades.length - 1)][(igualdades[(igualdades.length - 1)].length - 1)];
+
+        //Este arreglo nos sirva para almacenar los Bi de las variables básicas.
+        double[] varBasicas = new double[variablesBasicasPosI.size()];
+        for (int i = 0; i < variablesBasicasPosI.size(); i++) {
+            varBasicas[i] = igualdades[i][(igualdades[i].length - 1)];
+        }//Aquí hemos obtenido el valor de las variables básicas.    
+
+        System.out.println("SOLUCIÓN BÁSICA INICIAL");
+        //Se muestra la matriz con igualdades luego de haber convertido las desigualdades
+        for (int i = 0, k = 0; i < igualdades.length; i++) {
+            for (int j = 0; j < igualdades[i].length; j++) {
+
+                if ((i == variablesBasicasPosI.get(i)) && (j == variablesBasicasPosJ.get(i))) {
+                    //Si se entra aqui, quiere decir que esa variable esta en la base.
+
+                    System.out.print("X" + (j + 1) + " = " + varBasicas[k]);
+                    k++;/*si se encuentra una variable de base, se aumenta el valor de k
+                          Para poder mostrar la siguiente variable que esta en la base
+                          (si es que hay alguna)*/
+                    break;//Terminamos, porque la variable de base ya se determino.
+                }
+
+            }//Fin del segundo bucle.
+            System.out.println("");//Salto de linea
+            if (k == variablesBasicasPosI.size()) {
+                break;//Salimos del bucle puesto que ya no hay más variables en la Base.
+            }
+        }//Fin del primer bucle.
+
+        //Mostrando el valor de Z en la Solución básica inicial.
+        System.out.println("Z = " + Z + "\n\n");
+
+        /*
+            PASO 4: Determinar si esta solución es óptima, verificar si 
+            la función objetivo puede ser mejorada, aumentando disminuyendo el 
+            valor de cualquier variable no básica, esto se hace eliminando las 
+            variables básicas de la fila Z y revisando el signo de los elementos 
+            de esa fila para cada variable no básica. Si todos los valores son 
+            positivos o ceros, entonces esta solución es óptima (maximización). 
+            Si todos los valores son negativos o ceros, entonces esta solución 
+            es óptima (minimización). 
+         */
+        boolean condicionZ = false;/*
+            Arreglo de boolean, para determinar si si todos los valores son
+            positivos o cero (MAX) o negativos o cero (MIN).
+            
+            Donde:
+                True indica que el bucle, va a continuar porque la condición
+                se cumple.
+         */
+        OUTER:
+        for (int j = 0; j < igualdades[0].length; j++) {
+            switch (MAXMIN) {
+                case 1://Maximización
+                    if (igualdades[(igualdades.length - 1)][j] >= 0) {
+
+                        condicionZ = false;/*Si al terminar de revisar todos los
+                        valores de Z, la condición continua siendo false, eso quiere
+                        decir que ya encontramos la SOLUCIÓN FACTIBLE ÓPTIMA.
+                         */
+                    } else {
+                        condicionZ = true;/*True indica que el valor es < 0
+                        por lo que, si al evaluar cualquiera de los valores, uno
+                        es negativo, eso nos indica que el algoritmo Simplex debe
+                        seguir
+                         */ break OUTER;
+                        /*Ya no es necesario seguir evaluando los demás valores
+                        entonces terminamos el bucle con la instrucción break;
+                        porque seria redundante seguir comparando.
+                         */
+                    }
+                    break;
+                case 2://Minimización
+                    if (igualdades[(igualdades.length - 1)][j] <= 0) {
+
+                        condicionZ = false;/*True indica que el valor es > 0
+                        por lo que, si al evaluar cualquiera de los valores, uno
+                        es positivo, eso nos indica que el algoritmo Simplex debe
+                        seguir
+                         */
+                    } else {
+                        condicionZ = true;/*True indica que el valor es <= 0
+                        por lo que, si al terminar de revisar todos los valores,
+                        la condición se queda en false, eso nos indica que el
+                        algoritmo Simplex debe terminar porque en ese momento,
+                        habremos obtenido una SOLUCIÓN FACTIBLE ÓPTIMA.
+                         */ break OUTER;
+                        /*Ya no es necesario seguir evaluando los demás valores
+                        entonces terminamos el bucle con la instrucción break;
+                        porque seria redundante seguir comparando.
+                         */
+                    }
+                    break;
+                default:
+                    break OUTER; //Salir del bucle porque el usuario no ha definido si MAX o MIN.
+            }
+        }
+
+        /*
+            PASO 5: Si la solución no es óptima determine de la tabla, 
+            la variable de entrada (o variable básica nueva); Seleccione la 
+            variable no básica que al incrementarse o disminuirse, aumentará o 
+            disminuirá el valor de Z más rápidamente. Esto se hace revisando los 
+            valores de la fila Z en la tabla y se selecciona la variable no 
+            básica cuyo valor es más pequeño (maximización). Se selecciona la 
+            variable no básica cuyo valor es más grande (minimización). 
+            “Principio de Optimidad”.
+         */
+        if (condicionZ) {//Si no es óptimo, se ejecuta esto.-
+
+            //Del paso 5, determinando la variable de entrada.
+            ArrayList<Integer> varEntradaPosI = new ArrayList<>();
+            ArrayList<Integer> varEntradaPosJ = new ArrayList<>();
+
+            double numMayorMenor = 0;
+            if (MAXMIN == 1) {
+
+                for (int j = 0; j < igualdades[0].length; j++) {
+
+                    if (igualdades[(igualdades.length - 1)][j] < numMayorMenor) {/*
+                        valor más pequeño(MAXIMIZACIÓN)
+                         */
+                        numMayorMenor = igualdades[(igualdades.length - 1)][j];
+                    } else if (igualdades[(igualdades.length - 1)][j] == numMayorMenor) {//DEGENERACIÓN
+                        System.out.println("Tenemos un caso de degeneración porque hay dos variables iguales\n"
+                                + "y el no sabemos que variable de entrada tomar");
+                        break;
+                    }
+                }
+            } else if (MAXMIN == 2) {
+
+                for (int j = 0; j < igualdades[0].length; j++) {
+
+                    if (igualdades[(igualdades.length - 1)][j] < numMayorMenor) {/*
+                        valor más grande(MINIMIZACIÓN)
+                         */
+                        numMayorMenor = igualdades[(igualdades.length - 1)][j];
+                    } else if (igualdades[(igualdades.length - 1)][j] == numMayorMenor) {//DEGENERACIÓN
+                        System.out.println("Tenemos un caso de degeneración porque hay dos variables iguales\n"
+                                + "y el no sabemos que variable de entrada tomar");
+                        break;
+                    }
+                }
+
+            }
+
+            for (int j = 0; j < igualdades[0].length; j++) {
+                if (igualdades[(igualdades.length - 1)][j] == numMayorMenor) {/*
+                        obteniendo el par ordenado de la variable de entrada.
+                     */
+
+                    varEntradaPosI.add(igualdades[(igualdades.length - 1)].length);
+                    varEntradaPosJ.add(j);
+
+                }
+            }
+            System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
+                    + " = " + numMayorMenor);//Variable de entrada.
+
+            /*
+                PASO 6: Determine la nueva variable básica que sale (variable de salida). 
+                Divida los elementos de la última columna (donde se colocan los valores de Bi), 
+                entre los valores correspondientes (que están en la misma fila) 
+                de la columna de la variable de entrada Xe. Tome como variable 
+                de salida Xs aquella de las variables básicas para la que el 
+                coeficiente es el más pequeño, finito y positivo, para maximización 
+                o minimización. “Principio de Factibilidad”.
+             */
+            double[] divisionMenor = new double[igualdades.length];
+            ArrayList<Integer> varSalidaPosJ = new ArrayList<>();
+
+            ArrayList<Double> divisionMenorValor = new ArrayList<>();
+            for (int i = 0; i < igualdades.length - 1 /*-1 para no considerar a Z*/; i++) {
+                divisionMenor[i] = igualdades[i][(igualdades[0].length - 1)] / igualdades[i][varEntradaPosJ.get(0)];
+
+                System.out.println((i + 1) + " : " + igualdades[i][(igualdades[0].length - 1)]
+                        + "/" + igualdades[i][varEntradaPosJ.get(0)]
+                        + " = " + divisionMenor[i]);
+                if (divisionMenor[i] > 0) {
+                    divisionMenorValor.add(divisionMenor[i]);
+                }
+            }
+
+            for (int k = 0; k < divisionMenor.length; k++) {
+
+                if (divisionMenor[k] == divisionMenorValor.stream().mapToDouble(i -> i).min().getAsDouble()) {
+                    //determinar cual es valor finito positivo menor.
+                    varSalidaPosJ.add(k);//Solo se guarda la fila pivote en esta variable
+                }
+            }
+            int columnaPivote = varSalidaPosJ.get(0);
+            int filaPivote = varEntradaPosJ.get(0);
+            System.out.println("La variable de salida (Xs) es: " + "X" + varBaseX[varSalidaPosJ.get(0)]);
+            System.out.println("Valor más pequeño, finito y positivo: "
+                    + divisionMenorValor.stream().mapToDouble(i -> i).min().getAsDouble()
+                    + "");
+
+            System.out.println("Fila Pivote: " + (filaPivote + 1));
+            System.out.println("Columna Pivote: " + (columnaPivote + 1));
+            System.out.println("Elemento pivote A" + (filaPivote + 1)
+                    + (columnaPivote + 1) + " = "
+                    + igualdades[columnaPivote][filaPivote]);
+
+            /*
+                Ejecutar paso intermedio entre 6-7
+             */
+            igualdades = dividirFila(igualdades,igualdades[columnaPivote][filaPivote] , columnaPivote);
+            mostrarMatriz(igualdades, variablesBasicasPosI, variablesBasicasPosJ, varBaseX);
+
+            // System.out.println(Arrays.deepToString(igualdades));
+        } else {
+
+            /*
+                En si, este else, deberia ser parte del paso 4, pero, al tratarse
+                de un condicional, me parecio mejor ubicarlo en el paso 5, en el
+                cuál solo hay dos posibles casos, o es óptimo o no.
+                si no es óptimo, se ejecuta el codigo que esta en el if, sino (else)
+                se ejecuta este código.
+             */
+            switch (MAXMIN) {
+                case 1://Maximización
+                    System.out.println("Paso 5: \n\tTodos los valores son positivos o cero."
+                            + "\n\tla solución es óptima.");
+                    break;
+                case 2://Minimización
+                    System.out.println("Paso 5: \n\tTodos los valores son negativos o cero."
+                            + "\n\tla solución es óptima.");
+                    break;
+                default:
+                    break;
+            }
+            //System.out.println("Paso 5:");
+        }
+
+    }
+
+    public static double[][] dividirFila(double igualdades[][], double divisor, int columnaPivote) {
+
+        for (int j = 0; j < (igualdades[0].length); j++) {
+          //  System.out.println(igualdades[columnaPivote][j] + " " + columnaPivote + ", " + j + " " + "/" + igualdades[columnaPivote][filaPivote] + columnaPivote + ", " + filaPivote +  " = " + igualdades[columnaPivote][j]);
+            igualdades[columnaPivote][j] = igualdades[columnaPivote][j] / divisor;
+        }
+        return igualdades;
+    }
+    
+    public static void mostrarMatriz(double igualdades[][], ArrayList<Integer> variablesBasicasPosI, ArrayList<Integer> variablesBasicasPosJ, int[] varBaseX) {
+
+        System.out.println("");//Salto de linea
         String espacioEntreColumnas = "             ";
         String espacioEntreColumnasNegativo = "            ";
 
@@ -167,6 +438,7 @@ public class MetodoSimplex {
 
                         //Se muestra la fila que contiene variable en la Base.
                         System.out.print("X" + (j + 1));
+                        varBaseX[i] = (j + 1);
                         System.out.print(espacioEntreColumnas + filaVariableBase);
                         break;//Terminamos el bucle anterior, porque ya fue recorrido.
 
@@ -194,49 +466,5 @@ public class MetodoSimplex {
         }//Fin del primer bucle
 
         System.out.println("\n");//Doble salto de linea, luego de terminar el paso 2.
-        /*
-            PASO 3:  Determine la solución básica factible inicial. 
-            Se seleccionan las variables holgura como variables de base inicial.
-        
-            Aquí se imprime la solución básica inicial, recorriendo la matriz 
-            igualdades, donde se encuentren los valores 1.0 en la intersección
-            de fila-columna, eso nos indica que la variable esta en la base.
-         */
-
-        //Obtenemos el valor Bi de Z
-        double Z = igualdades[(igualdades.length-1)][(igualdades[(igualdades.length-1)].length-1)];
-        
-        //Este arreglo nos sirva para almacenar los Bi de las variables básicas.
-        double[] varBasicas = new double[variablesBasicasPosI.size()];
-        for (int i = 0; i < variablesBasicasPosI.size(); i++) {
-            varBasicas[i] = igualdades[i][(igualdades[i].length - 1)];
-        }//Aquí hemos obtenido el valor de las variables básicas.    
-
-        System.out.println("SOLUCIÓN BÁSICA INICIAL");
-        //Se muestra la matriz con igualdades luego de haber convertido las desigualdades
-        for (int i = 0, k = 0; i < igualdades.length; i++) {
-            for (int j = 0; j < igualdades[i].length; j++) {
-
-                if ((i == variablesBasicasPosI.get(i)) && (j == variablesBasicasPosJ.get(i))) {
-                    //Si se entra aqui, quiere decir que esa variable esta en la base.
-                    
-                    System.out.print("X" + (j + 1) + " = " + varBasicas[k]);
-                    k++;/*si se encuentra una variable de base, se aumenta el valor de k
-                          Para poder mostrar la siguiente variable que esta en la base
-                          (si es que hay alguna)*/
-                    break;//Terminamos, porque la variable de base ya se determino.
-                }
-
-            }//Fin del segundo bucle.
-            System.out.println("");//Salto de linea
-            if(k == variablesBasicasPosI.size()){
-                break;//Salimos del bucle puesto que ya no hay más variables en la Base.
-            }
-        }//Fin del primer bucle.
-        
-        //Mostrando el valor de Z en la Solución básica inicial.
-        System.out.println("Z = " + Z + "\n\n");
-        
     }
-
 }
