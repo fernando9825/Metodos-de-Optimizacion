@@ -8,20 +8,91 @@ package metodosimplex;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+
 /**
  *
- * @author striker
+ * @author Fernando
  */
-public class MetodoSimplex {
+public class MetodoSimplex2 {
 
-    /**
-     * @param args the command line arguments
-     */
-    //VARIABLES A UTILIZAR
-    private static int columnaPivote, filaPivote;
-
+    private static int columnaPivote, filaPivote, MAXMIN;
+    private static double[][] matriz;
+    private static double[] fObjetivo, x, y;
+    private static boolean condicionZ = false;
     public static void main(String[] args) {
+        matriz =  paso1();
+        
+        //Paso2 -->Mostrar matriz
+         System.out.println("");
+        System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+        
+        //Paso3 --> Solucion basica inial
+        solBasicaInicial(matriz);
+        
+        //Paso4 -->Determinar si la funcion es optima
+        System.out.println("Determinando si la funcion es optima...");
+        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+        if(condicionZ){
+            System.out.println("No es optima");
+        }else{
+            System.out.println("Es optima");
+        }
+        
+        while(condicionZ){
+            //paso5 --> Determinar variable de entrada
+            filaPivote = varEntrada(matriz, MAXMIN);
+            
+            
+             //paso6 --> Determinar variable de salida
+            columnaPivote = varSalida(matriz);
+            
+            
+            /////////ELEMEMTO PIVOTE//////////////////////////////
+            System.out.println("Variable de entrada con valor: " + (columnaPivote +1));
+            System.out.println("Variable de salida con valor: " + (filaPivote + 1));
+            System.out.println("A" + (columnaPivote+1) +(filaPivote+1) + " = " +matriz[columnaPivote][filaPivote]);
+            
+            matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
+            mostrarMatriz(matriz);
+            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+        }
+        double[][] VB = determinarVarEnBase(matriz);
+        
+        
+        //Probar el valor de la funcion Z
+        try{
+        for(int i = 0; i<VB.length; i++){
+            
+            for(int j = 0; j<VB[i].length; j++){
+                
+                if(j != 0){
+                   y[i] = VB[i][j];
+                }
+            }
+        }
+        
+        
+        
+        }catch(Exception e){
+            
+        }
+        
+        int valoresXFinal[] = determinarVarEnBaseValor(matriz);
+        double Zevaluar =0;
+        for(int i =0; i<fObjetivo.length; i++){
+            
+            if(i == valoresXFinal[i]){
+                Zevaluar += fObjetivo[i]*matriz[i][(matriz[0].length-1)];
+            }
+        }
+        
+            System.out.println(Zevaluar);
+    }
+    
+    
+    
 
+    public static double[][] paso1(){
         /*
 
             Resolver mediante el método simplex:
@@ -48,10 +119,11 @@ public class MetodoSimplex {
             1 - Problema de Maximización
             2 - Problema de Minización
          */
-        int MAXMIN = 1; //MAX
+        MAXMIN = 1; //MAX
 
         //Restricciones
         double[] fObjetivo = {5, 8, 7};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+        setfObjetivo(fObjetivo);
         double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
             {3, 3, 3, 30},
             {0, 2, 5, 30},
@@ -121,109 +193,17 @@ public class MetodoSimplex {
                 + "            3X1 + 3X2 + 3X3 <= 30\n"
                 + "                + 2X2 + 5X3 <= 30\n"
                 + "            4X1 + 4X2       <= 24\n\n");
-
-        /*
-            PASO 2: Ordenar los datos en una tabla simplex. 
-        
-        
-            Se definen las columnas del simplex, mediante el siguiente bucle, el
-            el cual funciona obteniendo el número de filas que tiene la matriz
-            "igualdades".
-         */
-        //System.out.println("VB     X1        X2        X3        X4        X5        X6        Bi");
-        System.out.println("TABLA SIMPLEX");
-        mostrarMatriz(igualdades);
-
-        /*
-            PASO 3:  Determine la solución básica factible inicial. 
-            Se seleccionan las variables holgura como variables de base inicial.
-        
-            Aquí se imprime la solución básica inicial, recorriendo la matriz 
-            igualdades, donde se encuentren los valores 1.0 en la intersección
-            de fila-columna, eso nos indica que la variable esta en la base.
-         */
-        //Obtenemos el valor Bi de Z
-        solBasicaInicial(igualdades);
-        /*
-            PASO 4: Determinar si esta solución es óptima, verificar si 
-            la función objetivo puede ser mejorada, aumentando disminuyendo el 
-            valor de cualquier variable no básica, esto se hace eliminando las 
-            variables básicas de la fila Z y revisando el signo de los elementos 
-            de esa fila para cada variable no básica. Si todos los valores son 
-            positivos o ceros, entonces esta solución es óptima (maximización). 
-            Si todos los valores son negativos o ceros, entonces esta solución 
-            es óptima (minimización). 
-         */
-
-        boolean condicionZ = comprobarFactibilidadZ(igualdades, MAXMIN);
-        /*
-            PASO 5: Si la solución no es óptima determine de la tabla, 
-            la variable de entrada (o variable básica nueva); Seleccione la 
-            variable no básica que al incrementarse o disminuirse, aumentará o 
-            disminuirá el valor de Z más rápidamente. Esto se hace revisando los 
-            valores de la fila Z en la tabla y se selecciona la variable no 
-            básica cuyo valor es más pequeño (maximización). Se selecciona la 
-            variable no básica cuyo valor es más grande (minimización). 
-            “Principio de Optimidad”.
-         */
-        filaPivote = varEntrada(igualdades, MAXMIN);
-        columnaPivote = varSalida(igualdades);
-        igualdades = paso6(igualdades, MAXMIN, condicionZ);
-
-        while (true) {
-
-            condicionZ = comprobarFactibilidadZ(igualdades, MAXMIN);
-
-            if (condicionZ == false) {
-                break;
-            }
-            filaPivote = varEntrada(igualdades, MAXMIN);
-            columnaPivote = varSalida(igualdades);
-            igualdades = paso6(igualdades, MAXMIN, condicionZ);
-        }
-
+        return igualdades;
     }
-
+    
+    public static void setfObjetivo(double[] fObjetivo2){
+        fObjetivo = fObjetivo2;
+    }
     public static void mostrarMatriz(double[][] array) {
-//        System.out.println("");//Salto de linea
-//        String espacioEntreColumnas = "             ";
-//        System.out.print("VB" + espacioEntreColumnas);
-//        for (int i = 1; i < array[0].length; i++) {
-//            System.out.print("X" + i + espacioEntreColumnas + " ");
-//        }
-//        System.out.print("Bi\n");
-//
-//        //Mostrar los valores de la tabla
-//        ArrayList<Integer> Vbasicas = new ArrayList<>();
-//        double[][] VB = determinarVarEnBase(array);
-//        for (int i = 0, x = 0, y = 0; i < VB.length; i++) {
-//            for (int j = 0; j < VB[i].length; j++) {
-//                if (j == 0) {
-//                    x = (int) VB[i][j];
-//                } else {
-//                    y = (int) VB[i][j];
-//                    Vbasicas.add((y + 1));
-//                }
-//            }
-//        }
-//
-//        for (int x = 0; x < Vbasicas.size(); x++) {
-//            System.out.print("X" + Vbasicas.get(x));
-//            for (int y = 0; y < array[x].length; y++) {
-//                System.out.print(espacioEntreColumnas + array[x][y]);
-//            }
-//            System.out.println("");
-//        }
-//
-//        System.out.print("Z");
-//        for (int y = 0; y < array[array.length - 1].length; y++) {
-//            System.out.print(espacioEntreColumnas + array[array.length - 1][y]);
-//        }
-//        System.out.println("");
-
-        determinarVarEnBase(array); 
+        determinarVarEnBase(array);
+        System.out.println("");
         System.out.println(Arrays.deepToString(array).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
-
+        System.out.println("");
     }
 
     public static double[][] ConvertirVariableEnBase(double[][] igualdades, int posX, int posY) {
@@ -254,19 +234,12 @@ public class MetodoSimplex {
         System.arraycopy(igualdades[posX], 0, fila, 0, fila.length);
         System.arraycopy(igualdades[posX], 0, filaAux, 0, filaAux.length);
 
+        /*
+            POR CUALQUIER ERROR, DEBO REVISAR AQUIIIIIIIIIIIIIIIIII
+        */
         for (int i = 0; i < matrizEliminaciones.length; i++) {
             for (int k = 0; k < fila.length; k++) {
-                switch ((int) Math.signum(igualdades[i][posY])) {
-                    case -1:
-                        fila[k] = (fila[k] * -igualdades[i][posY]);
-                        break;
-                    case 1:
-                        fila[k] = (fila[k] * -igualdades[i][posY]);
-                        break;
-                    default:
-                        break;
-                }
-
+                fila[k] = (fila[k] *-igualdades[i][posY]);
                 if (i == posX) {
                     fila[k] = 0;
                 }
@@ -336,6 +309,7 @@ public class MetodoSimplex {
             }
         }
 
+        
         System.out.println("Las variables basicas son: ");
         System.out.println(Arrays.deepToString(varBasicas));
 
@@ -347,10 +321,10 @@ public class MetodoSimplex {
                     y = (int) varBasicas[i][j];
                 }
             }
-            System.out.println(Arrays.toString(varBasicas[i]) + " = X" + (y + 1));
+            System.out.println(Arrays.toString(varBasicas[i]) + " = X" + (y + 1) + " = " + igualdades[x][igualdades[0].length-1]);
 
         }
-
+         
         return varBasicas;
     }
 
@@ -473,7 +447,6 @@ public class MetodoSimplex {
 
                 varEntradaPosI.add(igualdades[(igualdades.length - 1)].length);
                 varEntradaPosJ.add(j);
-
             }
         }
         System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
@@ -492,14 +465,7 @@ public class MetodoSimplex {
             System.out.println((i + 1) + " : " + igualdades[i][(igualdades[0].length - 1)]
                     + "/" + igualdades[i][(filaPivote)]
                     + " = " + divisionMenor[i]);
-
             divisionMenorValor.add(divisionMenor[i]);
-//            if (divisionMenor[i] > 0) {
-//                
-//            }else if(Double.isInfinite(divisionMenor[i])){
-//            
-//                divisionMenorValor.add(0.0);
-//            }
         }
 
         for (int k = 0; k < divisionMenor.length; k++) {
@@ -522,51 +488,15 @@ public class MetodoSimplex {
                 }
             }
         }
-        System.out.println("La variable de salida (Xs) es: " + "X" + (Vbasicas.get(filaPivote) + 1));
+        System.out.println("La variable de salida (Xs) es: " + "X" + varSalidaPosJ.get(0));
         return varSalidaPosJ.get(0);
     }
 
     public static double[][] paso6(double[][] igualdades, int MAXMIN, boolean condicionZ) {
         if (condicionZ) {//Si no es óptimo, se ejecuta esto.-
-
-            //filaPivote = varEntrada(igualdades, MAXMIN);
-
-            /*
-                PASO 6: Determine la nueva variable básica que sale (variable de salida). 
-                Divida los elementos de la última columna (donde se colocan los valores de Bi), 
-                entre los valores correspondientes (que están en la misma fila) 
-                de la columna de la variable de entrada Xe. Tome como variable 
-                de salida Xs aquella de las variables básicas para la que el 
-                coeficiente es el más pequeño, finito y positivo, para maximización 
-                o minimización. “Principio de Factibilidad”.
-             */
-
- /* DATOS A MOSTRAR EN PANTALLA
-            
-            System.out.println("Fila Pivote: " + (columnaPivote + 1));
-            System.out.println("Columna Pivote: " + (filaPivote + 1));
-            System.out.println("Elemento pivote A" + (filaPivote + 1)
-                    + (columnaPivote + 1) + " = "
-                    + igualdades[columnaPivote][filaPivote]);
-            /*
-            /*
-                Ejecutar paso intermedio entre 6-7
-             */
-            //columnaPivote = varSalida(igualdades);
             igualdades = ConvertirVariableEnBase(igualdades, columnaPivote, filaPivote);
-            System.out.println(Arrays.deepToString(igualdades).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
-            //mostrarMatriz(igualdades);
-
-            // System.out.println(Arrays.deepToString(igualdades));
+            mostrarMatriz(igualdades);
         } else {
-
-            /*
-                En si, este else, deberia ser parte del paso 4, pero, al tratarse
-                de un condicional, me parecio mejor ubicarlo en el paso 5, en el
-                cuál solo hay dos posibles casos, o es óptimo o no.
-                si no es óptimo, se ejecuta el codigo que esta en el if, sino (else)
-                se ejecuta este código.
-             */
             switch (MAXMIN) {
                 case 1://Maximización
                     System.out.println("Paso 5: \n\tTodos los valores son positivos o cero."
@@ -583,5 +513,75 @@ public class MetodoSimplex {
 
         }
         return igualdades;
+    }
+    
+    public static int[] determinarVarEnBaseValor(double[][] igualdades) {
+
+        boolean esCero = false;
+        ArrayList<Integer> posX = new ArrayList<>();
+        ArrayList<Integer> posY = new ArrayList<>();
+
+        //ArrayList<ArrayList<Double>> varBasicas = new ArrayList<>();
+        for (int i = 0; i < (igualdades.length - 1)/*-1 para no evaluar Z*/; i++) {
+            for (int j = 0; j < igualdades[i].length; j++) {
+                if (igualdades[i][j] == 1) {
+
+                    for (int k = 0; k < igualdades.length; k++) {
+                        if (i != k) {
+                            if (igualdades[k][j] == 0) {
+                                esCero = true;
+                            } else {
+                                esCero = false;
+                                break;
+                            }
+                        }
+
+                    }
+                    if (esCero) {
+                        posX.add(i);
+                        posY.add(j);
+                    }
+                }
+
+            }
+
+        }
+
+        double[][] varBasicas = new double[posX.size()][2];
+
+        for (int i = 0; i < varBasicas.length; i++) {
+
+            for (int j = 0; j < varBasicas[i].length; j++) {
+                if (j == 0) {
+                    varBasicas[i][j] = posX.get(i);
+                } else {
+                    varBasicas[i][j] = posY.get(i);
+                }
+
+            }
+        }
+
+        
+//        System.out.println("Las variables basicas son: ");
+//        System.out.println(Arrays.deepToString(varBasicas));
+
+        int valores[] = new int[varBasicas.length];
+        for (int i = 0, x = 0, y = 0; i < varBasicas.length; i++) {
+            for (int j = 0; j < varBasicas[i].length; j++) {
+                if (j == 0) {
+                    x = (int) varBasicas[i][j];
+                } else {
+                    y = (int) varBasicas[i][j];
+                }
+            }
+            
+            
+                valores[i] = x;
+            
+            //System.out.println(Arrays.toString(varBasicas[i]) + " = X" + (y + 1) + " = " + igualdades[x][igualdades[0].length-1]);
+
+        }
+         
+        return valores;
     }
 }
