@@ -160,17 +160,7 @@ public class MetodoSimplex2 {
         //Agregamos la función objetivo a la última fila de igualdades.  
         System.arraycopy(fObjetivoCero, 0, igualdades[(igualdades.length - 1)], 0, igualdades[0].length);
 
-        /*
-            Esta parte de encarga de mostrar en consola, el paso 1.
-            Luego de haber convertido las desigualdades en igualdades.
-         */
-        //Problema planteado inicialmente.
-        System.out.println("MAX Z = 5X1 + 8X2 +7X3\n"
-                + "        \n"
-                + "        S.A.R\n"
-                + "            3X1 + 3X2 + 3X3 <= 30\n"
-                + "                + 2X2 + 5X3 <= 30\n"
-                + "            4X1 + 4X2       <= 24\n\n");
+        
         return igualdades;
     }
 
