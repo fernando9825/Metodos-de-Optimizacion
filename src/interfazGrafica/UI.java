@@ -5,18 +5,60 @@
  */
 package interfazGrafica;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
 /**
  *
  * @author striker
  */
+
+
 public class UI extends javax.swing.JFrame {
 
     /**
      * Creates new form UI
      */
+    
+    Toolkit toolkit;
+    
+    panel_Matrix pnlMatrix = new panel_Matrix();
     public UI() {
         initComponents();
+        this.setTitle("Método SIMPLEX - Fernando Alvarado - UES-FMO");
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        Dimension dimension = new Dimension();
+        toolkit = Toolkit.getDefaultToolkit();
+        dimension = toolkit.getScreenSize();
+        int ancho = dimension.width;
+        int alto = dimension.height;
+        double porcentajeScreen = 0.8;
+        System.out.println("ancho: " + (int)(ancho*porcentajeScreen) );
+        System.out.println("alto: " + (int)(alto*porcentajeScreen) );
+        this.setSize((int)(ancho*porcentajeScreen), (int)(alto*porcentajeScreen));
+        this.setLocationRelativeTo(null);
+       
+        //Haciendo dinamicamente...
+        
+        
+        this.add(pnlMatrix);
+        this.pnlMatrix.setLocation(100, 100);
+        
     }
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -27,21 +69,40 @@ public class UI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jButton1 = new javax.swing.JButton();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jButton1.setText("jButton1");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton1)
+                .addContainerGap(307, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton1)
+                .addContainerGap(265, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        pnlMatrix.Mi_Componente();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -79,5 +140,68 @@ public class UI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
     // End of variables declaration//GEN-END:variables
 }
+
+class panel_Matrix extends JPanel implements ActionListener{
+     
+    private int index = 1;
+    //Nos sirve para almacenar a los objetos creados
+    private Map nota = new HashMap();
+    
+    panel_Matrix(){
+         this.setSize(600, 300);
+        this.setVisible(true);
+        this.setBorder(BorderFactory.createLineBorder( Color.BLACK ));
+        GridLayout grid = new GridLayout();
+        GridBagLayout gBag = new GridBagLayout();
+        grid.setColumns(3);
+        grid.setRows(2);
+        grid.setVgap(10);
+        grid.setHgap(10);
+        System.out.println(grid.getVgap());
+        
+        this.setLayout( grid );
+    }
+    
+    public void Mi_Componente()
+    {        
+        //instancia nueva a componente
+        jpComponente jpc = new jpComponente(index);
+        panelMatrix panel = new panelMatrix(index);
+        panel.txtValor.addActionListener(this);//escucha eventos
+        //jpc.panel.addActionListener(this);//escucha eventos
+        //this.add(jpc);//se añade al jpanel
+        this.add(panel);
+        this.validate();
+        //se añade al MAP
+        this.nota.put("key_" + index, panel );
+        //se incrementa contador de componentes
+        index++;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        
+     //se obtiene el comando ejecutado
+        String comando = e.getActionCommand();
+        //se recorre el MAP
+        
+        Iterator it = nota.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry entry = (Map.Entry)it.next();
+            //se obtiene el KEY -> identificador unico
+            String itm = entry.getKey().toString();
+            //si comando de componente es igual a comando pulsado
+            if( itm.equals(comando))
+            {
+                //se recupera el contenido del JTextfield
+                String name = ((jpComponente) entry.getValue()).txtName.getText();
+                //mostramos resultado
+                JOptionPane.showMessageDialog(null, "Se presiono boton " + itm + " \n Hola " + name);
+            }
+        }   
+    }
+}
+

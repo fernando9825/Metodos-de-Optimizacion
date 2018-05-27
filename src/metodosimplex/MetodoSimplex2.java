@@ -5,6 +5,14 @@
  */
 package metodosimplex;
 
+import UI2.inter;
+import static UI2.inter.columnaPivote;
+import static UI2.inter.fObjetivo;
+import static UI2.inter.filaPivote;
+import static UI2.inter.fraccion;
+import static UI2.inter.vArtificialIndice;
+import static UI2.inter.vHolguraIndice;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,73 +23,69 @@ import java.util.Arrays;
  */
 public class MetodoSimplex2 {
 
-    static Fraction fraccion = new Fraction();//Instancia de la clase Fraction para convertir decimales a quebrados
-    private static int columnaPivote, filaPivote, MAXMIN;
-    private static double[][] matriz;
-    private static double[] fObjetivo;
-    private static boolean condicionZ = false;
-     //Nuevos campos de clase
-    static ArrayList<Integer> vHolguraIndice = new ArrayList<>();
-    static ArrayList<Integer> vArtificialIndice = new ArrayList<>();
+    
+    
 
     public static void main(String[] args) throws IOException {
         //matriz = paso1();
         
-        MAXMIN = 1; //MIN
-        //Restricciones
-        double[] fObjetivo = {5, 8, 7};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-        setfObjetivo(fObjetivo);
-        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-            {3, 3, 3, 30},
-            {0, 2, 5, 30},
-            {4, 4, 0, 24}};
-
-        /*
-           CONDICIÓN DE LAS RESTRICCIONES:
-        
-            0 ---->  (<=)
-            1 ---->  (=)
-            2 ---->  (>=)
-         */
-        int[] condicion = new int[]{
-            0,
-            0,
-            2,};
-        
-        matriz = paso1(array, fObjetivo, condicion, MAXMIN, verificarCondiciones(condicion));
-        
-        //Paso2 -->Mostrar matriz
-        System.out.println("");
-        System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
-
-        //Paso3 --> Solucion basica inial
-        solBasicaInicial(matriz);
-
-        //Paso4 -->Determinar si la funcion es optima
-        System.out.println("Determinando si la funcion es optima...");
-        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
-
-        int iteracion = 1;
-        while (condicionZ) {
-            System.out.println("Iteración: " + iteracion);
-            //paso5 --> Determinar variable de entrada
-            filaPivote = varEntrada(matriz, MAXMIN);
-
-            //paso6 --> Determinar variable de salida
-            columnaPivote = varSalida(matriz);
-
-            /////////ELEMEMTO PIVOTE//////////////////////////////
-            System.out.println("Variable de entrada con valor: " + (columnaPivote + 1));
-            System.out.println("Variable de salida con valor: " + (filaPivote + 1));
-            System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
-
-            matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
-            mostrarMatriz(matriz);
-            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
-            iteracion++;
-        }
-
-        comprobarZ(matriz, fObjetivo);
+        new inter().setVisible(true);
+        //new interfaz().setVisible(true);
+//        MAXMIN = 1; //MIN
+//        //Restricciones
+//        double[] fObjetivo = {5, 8, 7};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//        setfObjetivo(fObjetivo);
+//        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//            {3, 3, 3, 30},
+//            {0, 2, 5, 30},
+//            {4, 4, 0, 24}};
+////
+//        /*
+//           CONDICIÓN DE LAS RESTRICCIONES:
+//        
+//            0 ---->  (<=)
+//            1 ---->  (=)
+//            2 ---->  (>=)
+//         */
+//        int[] condicion = new int[]{
+//            0,
+//            0,
+//            2,};
+//        
+//        matriz = paso1(array, fObjetivo, condicion, MAXMIN, verificarCondiciones(condicion));
+//        
+//        //Paso2 -->Mostrar matriz
+//        System.out.println("");
+//        System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+//
+//        //Paso3 --> Solucion basica inial
+//        solBasicaInicial(matriz);
+//
+//        //Paso4 -->Determinar si la funcion es optima
+//        System.out.println("Determinando si la funcion es optima...");
+//        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+//
+//        int iteracion = 1;
+//        while (condicionZ) {
+//            System.out.println("Iteración: " + iteracion);
+//            //paso5 --> Determinar variable de entrada
+//            filaPivote = varEntrada(matriz, MAXMIN);
+//
+//            //paso6 --> Determinar variable de salida
+//            columnaPivote = varSalida(matriz);
+//
+//            /////////ELEMEMTO PIVOTE//////////////////////////////
+//            System.out.println("Variable de entrada con valor: " + (columnaPivote + 1));
+//            System.out.println("Variable de salida con valor: " + (filaPivote + 1));
+//            System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
+//
+//            matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
+//            mostrarMatriz(matriz);
+//            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+//            iteracion++;
+//        }
+//
+//        comprobarZ(matriz, fObjetivo);
     }
 
     public static double[][] paso1(double[][] array, double[] fObjetivo, int[] condicion, int MAXMIN, boolean menorOIgualQue) {
