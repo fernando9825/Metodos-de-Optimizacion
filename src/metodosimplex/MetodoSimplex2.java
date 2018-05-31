@@ -6,16 +6,12 @@
 package metodosimplex;
 
 import UI2.inter;
-import static UI2.inter.columnaPivote;
-import static UI2.inter.fObjetivo;
-import static UI2.inter.filaPivote;
-import static UI2.inter.fraccion;
-import static UI2.inter.vArtificialIndice;
-import static UI2.inter.vHolguraIndice;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  *
@@ -23,69 +19,103 @@ import java.util.Arrays;
  */
 public class MetodoSimplex2 {
 
-    
-    
+    //Campos de clase
+    public static Fraction fraccion = new Fraction();//Instancia de la clase Fraction para convertir decimales a quebrados
+    public static int columnaPivote, filaPivote, MAXMIN;
+    public static double[][] matriz;
+    public static double[] fObjetivo;
+    public static int[] condicion;
+    public static boolean condicionZ = false;
+    public static String procedimiento = "";
+    //Nuevos campos de clase
+    public static ArrayList<Integer> vHolguraIndice = new ArrayList<>();
+    public static ArrayList<Integer> vArtificialIndice = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
-        //matriz = paso1();
+       
+
+        //new inter().setVisible(true);
+       
         
-        new inter().setVisible(true);
-        //new interfaz().setVisible(true);
-//        MAXMIN = 1; //MIN
-//        //Restricciones
-//        double[] fObjetivo = {5, 8, 7};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+        MAXMIN = 1; //MAX
+        //Restricciones
+        double[] fObjetivo = {5, 8, 7};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+        setfObjetivo(fObjetivo);
+        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+            {3, 3, 3, 30},
+            {0, 2, 5, 30},
+            {4, 4, 0, 24}};
+
+//        double[] fObjetivo = {20, 40};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
 //        setfObjetivo(fObjetivo);
 //        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-//            {3, 3, 3, 30},
-//            {0, 2, 5, 30},
-//            {4, 4, 0, 24}};
-////
-//        /*
-//           CONDICIÓN DE LAS RESTRICCIONES:
-//        
-//            0 ---->  (<=)
-//            1 ---->  (=)
-//            2 ---->  (>=)
-//         */
-//        int[] condicion = new int[]{
-//            0,
-//            0,
-//            2,};
-//        
-//        matriz = paso1(array, fObjetivo, condicion, MAXMIN, verificarCondiciones(condicion));
-//        
-//        //Paso2 -->Mostrar matriz
-//        System.out.println("");
-//        System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+//            {1, 3, 9},
+//            {2, 1, 8},};
+
+//        double[] fObjetivo = {-3, 8};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//        setfObjetivo(fObjetivo);
+//        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//            {4, 1, 13},
+//            {2, 3, 6},};
 //
-//        //Paso3 --> Solucion basica inial
-//        solBasicaInicial(matriz);
-//
-//        //Paso4 -->Determinar si la funcion es optima
-//        System.out.println("Determinando si la funcion es optima...");
-//        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
-//
-//        int iteracion = 1;
-//        while (condicionZ) {
-//            System.out.println("Iteración: " + iteracion);
-//            //paso5 --> Determinar variable de entrada
-//            filaPivote = varEntrada(matriz, MAXMIN);
-//
-//            //paso6 --> Determinar variable de salida
-//            columnaPivote = varSalida(matriz);
-//
-//            /////////ELEMEMTO PIVOTE//////////////////////////////
-//            System.out.println("Variable de entrada con valor: " + (columnaPivote + 1));
-//            System.out.println("Variable de salida con valor: " + (filaPivote + 1));
-//            System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
-//
-//            matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
-//            mostrarMatriz(matriz);
-//            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
-//            iteracion++;
-//        }
-//
-//        comprobarZ(matriz, fObjetivo);
+        /*
+           CONDICIÓN DE LAS RESTRICCIONES:
+        
+            0 ---->  (<=)
+            1 ---->  (=)
+            2 ---->  (>=)
+         */
+        int[] condicion = new int[]{
+            0,
+            0,
+            0,};
+
+        matriz = paso1(array, fObjetivo, condicion, MAXMIN, verificarCondiciones(condicion));
+        
+
+        //Paso2 -->Mostrar matriz
+        System.out.println("");
+        procedimiento += "\n";
+        System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+        
+        //Agregando la Matriz al procedimiento
+        procedimiento  += Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]");
+
+        //Paso3 --> Solucion basica inial
+        solBasicaInicial(matriz);
+
+        //Paso4 -->Determinar si la funcion es optima
+        System.out.println("Determinando si la funcion es optima...");
+        procedimiento  += "Determinando si la funcion es optima...";
+        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+
+        int iteracion = 1;
+        while (condicionZ) {
+            System.out.println("Iteración: " + iteracion);
+            procedimiento += "\nIteración: " + iteracion;
+            //paso5 --> Determinar variable de entrada
+            filaPivote = varEntrada(matriz, MAXMIN);
+
+            //paso6 --> Determinar variable de salida
+            columnaPivote = varSalida(matriz);
+
+            /////////ELEMEMTO PIVOTE//////////////////////////////
+            System.out.println("Variable de entrada con valor: " + (columnaPivote + 1));
+            System.out.println("Variable de salida con valor: " + (filaPivote + 1));
+            System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
+             procedimiento += "\nVariable de entrada con valor: " + (columnaPivote + 1)+
+                    "\n" + "Variable de salida con valor: " + (filaPivote + 1)+
+                    "\n" + "A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote];
+            matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
+            mostrarMatriz(matriz);
+            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+            
+           
+            iteracion++;
+        }
+
+        comprobarZ(matriz, fObjetivo);
+
     }
 
     public static double[][] paso1(double[][] array, double[] fObjetivo, int[] condicion, int MAXMIN, boolean menorOIgualQue) {
@@ -105,6 +135,10 @@ public class MetodoSimplex2 {
                 + "            3X1 + 3X2 + 3X3 <= 30\n"
                 + "                + 2X2 + 5X3 <= 30\n"
                 + "            4X1 + 4X2       <= 24\n\n");
+
+        //Vaciando los campos
+        vHolguraIndice.removeAll(vHolguraIndice);
+        vArtificialIndice.removeAll(vArtificialIndice);
 
         int indice = (array[0].length - 1);//Indice de la ultima variable de decision
 
@@ -168,18 +202,21 @@ public class MetodoSimplex2 {
 
 //        System.out.println(Arrays.deepToString(aux).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
 //        System.out.println("");
-
         if (!vHolguraIndice.isEmpty()) {
             System.out.println("Variables de holgura");
+            procedimiento += "Variables de holgura\n";
             vHolguraIndice.forEach((Integer a) -> {
                 System.out.println("X" + a);
+                procedimiento += "X" + a + "\n";
             });
         }
 
         if (!vArtificialIndice.isEmpty()) {
             System.out.println("\nVariables artificiales");
+            procedimiento += "\n\nVariables artificiales";
             vArtificialIndice.forEach((Integer b) -> {
                 System.out.println("X" + b);
+                procedimiento += "X" + b + "\n";
             });
         }
 
@@ -286,11 +323,14 @@ public class MetodoSimplex2 {
         if (menorOIgualQue) {
             return aux3;
         } else {
+            procedimiento += "\n\nSe esta trabajando con la Técnica M";
+            procedimiento += "\nla penultima fila corresponde a los valores de M";
+            procedimiento += "\ny la última a los términos independientes de M\n";
             return aux2;
         }
 
     }
-    
+
     public static boolean verificarCondiciones(int[] condicion) {
         boolean menorOIgual = false;
 
@@ -306,7 +346,7 @@ public class MetodoSimplex2 {
 
         if (menorOIgual) {
             System.out.println("Todas las restricciones son <=");
-        }else{
+        } else {
             System.out.println("tenemos una combinación de diferentes tipos de restricción");
         }
         return menorOIgual;
@@ -331,7 +371,9 @@ public class MetodoSimplex2 {
         }
 
         System.out.println(Arrays.deepToString(arrayFraction).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+
         System.out.println("");
+        procedimiento += "\n\n" + Arrays.deepToString(arrayFraction).replace("], ", "]\n").replace("[[", "[").replace("]]", "]") + "\n";
     }
 
     public static double[][] ConvertirVariableEnBase(double[][] igualdades, int posX, int posY) {
@@ -459,6 +501,7 @@ public class MetodoSimplex2 {
     public static void solBasicaInicial(double array[][]) throws IOException {
         System.out.println("");
         System.out.println("SOLUCIÓN BÁSICA INICIAL");
+        procedimiento += "\n\nSOLUCIÓN BÁSICA INICIAL\n";
         ArrayList<Integer> Vbasicas = new ArrayList<>();
         double[][] VB = determinarVarEnBase(array, false);
         for (int i = 0, x = 0, y = 0; i < VB.length; i++) {
@@ -475,8 +518,10 @@ public class MetodoSimplex2 {
         for (int x = 0; x < Vbasicas.size(); x++) {
             System.out.print("X" + Vbasicas.get(x));
             System.out.print(" = " + array[x][(array[x].length - 1)] + "\n");
+            procedimiento += "X" + Vbasicas.get(x) + " = " + array[x][(array[x].length - 1)] + "\n";
         }
         System.out.print("Z = " + array[array.length - 1][(array[array.length - 1].length - 1)] + "\n\n");
+        procedimiento += "Z = " + array[array.length - 1][(array[array.length - 1].length - 1)] + "\n\n";
 
     }
 
@@ -538,9 +583,11 @@ public class MetodoSimplex2 {
         }
 
         if (condicionZ) {
-            System.out.println("No es optima");
+            System.out.println("No es óptima");
+            procedimiento += "\nNo es óptima";
         } else {
-            System.out.println("Es optima");
+            System.out.println("Es óptima");
+            procedimiento += "\nEs óptima";
         }
         return condicionZ;
     }
@@ -549,25 +596,36 @@ public class MetodoSimplex2 {
         //Del paso 5, determinando la variable de entrada.
         ArrayList<Integer> varEntradaPosI = new ArrayList<>();
         ArrayList<Integer> varEntradaPosJ = new ArrayList<>();
+        ArrayList<Double> mayorMenor = new ArrayList<>();
 
         double numMayorMenor = 0;
         if (MAXMIN == 1) {
 
             for (int j = 0; j < igualdades[0].length; j++) {
+                mayorMenor.add(igualdades[(igualdades.length - 1)][j]);
+            }
 
-                if (igualdades[(igualdades.length - 1)][j] < numMayorMenor) {/*
+            for (int j = 0; j < igualdades[0].length; j++) {
+                /*
                         valor más pequeño(MAXIMIZACIÓN)
-                     */
+                 */
+                if (igualdades[(igualdades.length - 1)][j] == mayorMenor.stream().mapToDouble(i -> i).min().getAsDouble()) {
                     numMayorMenor = igualdades[(igualdades.length - 1)][j];
                 }
             }
+
         } else if (MAXMIN == 2) {
 
             for (int j = 0; j < igualdades[0].length; j++) {
 
-                if (igualdades[(igualdades.length - 1)][j] > numMayorMenor) {/*
+                mayorMenor.add(igualdades[(igualdades.length - 1)][j]);
+            }
+
+            for (int j = 0; j < igualdades[0].length; j++) {
+                /*
                         valor más grande(MINIMIZACIÓN)
-                     */
+                 */
+                if (igualdades[(igualdades.length - 1)][j] == mayorMenor.stream().mapToDouble(i -> i).max().getAsDouble()) {
                     numMayorMenor = igualdades[(igualdades.length - 1)][j];
                 }
             }
@@ -585,6 +643,8 @@ public class MetodoSimplex2 {
         }
         System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
                 + " = " + fraccion.fraction(numMayorMenor));//Variable de entrada.
+        procedimiento += "\nLa variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
+                + " = " + fraccion.fraction(numMayorMenor);
         return (varEntradaPosJ.get(0));
     }
 
@@ -594,17 +654,26 @@ public class MetodoSimplex2 {
 
         ArrayList<Double> divisionMenorValor = new ArrayList<>();
         for (int i = 0; i < igualdades.length - 1 /*-1 para no considerar a Z*/; i++) {
-            
-            if(igualdades[i][(filaPivote)] == 0){
-               //Si el denominador es cero, devolver infinito
-                divisionMenorValor.add(Double.POSITIVE_INFINITY);
-            }else{
-            divisionMenor[i] = igualdades[i][(igualdades[0].length - 1)] / igualdades[i][(filaPivote)];
 
-            System.out.println((i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                    + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
-                    + " = " + divisionMenor[i]);
-            divisionMenorValor.add(divisionMenor[i]);
+            if (igualdades[i][(filaPivote)] == 0) {
+                //Si el denominador es cero, devolver infinito
+                divisionMenorValor.add(Double.POSITIVE_INFINITY);
+                System.out.println((i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + " = " + "Infinity");
+                procedimiento += "\n" + (i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + " = " + "Infinity";
+            } else {
+                divisionMenor[i] = igualdades[i][(igualdades[0].length - 1)] / igualdades[i][(filaPivote)];
+
+                System.out.println((i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + " = " + divisionMenor[i]);
+                procedimiento += "\n" + (i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + " = " + divisionMenor[i];
+                divisionMenorValor.add(divisionMenor[i]);
             }
         }
 
@@ -629,6 +698,7 @@ public class MetodoSimplex2 {
             }
         }
         System.out.println("La variable de salida (Xs) es: " + "X" + varSalidaPosJ.get(0));
+        procedimiento += "\nLa variable de salida (Xs) es: " + "X" + varSalidaPosJ.get(0);
         return varSalidaPosJ.get(0);
     }
 
@@ -749,34 +819,77 @@ public class MetodoSimplex2 {
         //Probar el valor de Z
 
         double Z = 0;
-        System.out.println("La solución es: ");
+        HashMap<Integer, Double> hmapVB = new HashMap<>();
         ArrayList<Integer> subIndiceVB = VBasicasSubIndice(matrix);
+
+        System.out.println("La solución es: ");
+        procedimiento += "\nLa solución es: \n";
         for (int x = 0; x < subIndiceVB.size(); x++) {
             System.out.print("X" + subIndiceVB.get(x));
-            System.out.print(" = " + fraccion.fraction(matrix[x][(matrix[x].length - 1)]) + "\n");
+            hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)]);
+            System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
+            procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
         }
+
+        //Obteniendo las llaves del hmap
+        List keys = new ArrayList(hmapVB.keySet());
+        //Ordenando variables básicas
+        Collections.sort(keys);//Aqui ya esta ordenadas
+
+        //Creando un contadores, para saber si es la primera iteración, y agregar o no, un signo(concatenado).
+//        int x = 0;
+//
+//        System.out.print("\nZ = ");
+//        procedimiento += "\n\nZ = ";
+//        for (Object a : keys) {
+//
+//            if (x == ZObj.length) {
+//                //Nos salimos del bucle, porque ya se evaluó la función objetivo.
+//                //si hubiese más variables, serian, de holgura o de exceso.
+//                break;
+//            }
+//            if ((x != 0)) {
+//                if (hmapVB.get((int) a) > 0) {
+//                    System.out.print(" + ");
+//                    procedimiento += " + ";
+//                }
+//            }
+//
+//            if (x == (int) a) {
+//                System.out.print(fraccion.fraction(ZObj[x])
+//                        + "(" + fraccion.fraction(hmapVB.get((int) a)) + ")");
+//                Z += (ZObj[x] * hmapVB.get((int) a));
+//                procedimiento += fraccion.fraction(ZObj[x])
+//                        + "(" + fraccion.fraction(hmapVB.get((int) a)) + ")";
+//            }
+//
+//            //System.out.println("Llave: " + a + " su valor es: " + hmaVB.get((int) a));
+//            x++;
+//        }
 
         System.out.print("\nZ = ");
-        for (int i = 1, k = 0; k < subIndiceVB.size(); k++) {
-            if (i == subIndiceVB.get(k)) {
-                //esta si es la buena :'v
-                if ((i - 1) > 1) {
-                    if (fObjetivo[(i - 1)] > 0) {
+        procedimiento += "\n\nZ = ";
+        for (int i = 0, k = 0; i < ZObj.length; i++) {
+            if (hmapVB.containsKey((i + 1))) {
+
+                if ((k != 0)) {
+                    if (hmapVB.get((i + 1)) > 0) {
                         System.out.print(" + ");
+                        procedimiento += " + ";
                     }
                 }
-                System.out.print(fraccion.fraction(ZObj[(i - 1)])
-                        + "(" + fraccion.fraction(matrix[k][(matrix[k].length - 1)]) + ")");
-                Z += (ZObj[(i - 1)] * matrix[k][(matrix[k].length - 1)]);
-            }
-            if (k == subIndiceVB.size() - 1) {
-                if (i < fObjetivo.length) {
-                    i++;
-                    k = 0;
-                }
+                
+                
+                System.out.print(fraccion.fraction(ZObj[i])
+                        + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")");
+                Z += (ZObj[i] * hmapVB.get((i + 1)));
+                procedimiento += fraccion.fraction(ZObj[i])
+                        + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")";
+                k++;
             }
         }
 
-        System.out.print(" = " + fraccion.fraction(Z) + "\n\n");
+        System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+        procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
     }
 }
