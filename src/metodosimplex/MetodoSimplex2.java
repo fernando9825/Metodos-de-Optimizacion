@@ -5,6 +5,7 @@
  */
 package metodosimplex;
 
+import UI2.inter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +20,7 @@ import java.util.List;
 public class MetodoSimplex2 {
 
     //Campos de clase
-    public static Fraction fraccion = new Fraction();//Instancia de la clase Fraction para convertir decimales a quebrados
+    public static Fraction fraccion = new Fraction(true);//Instancia de la clase Fraction para convertir decimales a quebrados
     public static int columnaPivote, filaPivote, MAXMIN;
     public static double[][] matriz;
     public static double[] fObjetivo;
@@ -33,11 +34,12 @@ public class MetodoSimplex2 {
     //Filas
     public static ArrayList<Integer> vArtificialFilas = new ArrayList<>();
 
+
     public static void main(String[] args) throws IOException {
 
-        //new inter().setVisible(true);
-        //MAXMIN = 1; //MAX
-        MAXMIN = 2; //MIN
+//        new inter().setVisible(true);
+        MAXMIN = 1; //MAX
+        //MAXMIN = 2; //MIN
         //Restricciones
 
         //Problema de amaya
@@ -61,7 +63,6 @@ public class MetodoSimplex2 {
 //            2,
 //            1,
 //            0};
-
 //        double[] fObjetivo = {20, 40};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
 //        setfObjetivo(fObjetivo);
 //        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
@@ -80,14 +81,17 @@ public class MetodoSimplex2 {
             1 ---->  (=)
             2 ---->  (>=)
          */
-
         //Problema de amaya
+//        int[] condicion = new int[]{
+//            2,
+//            0,
+//            1,
+//            0};
         int[] condicion = new int[]{
             2,
             0,
-            1,
+            2,
             0};
-
         tecnicaM = verificarCondiciones(condicion);//Si es false, todas son <=, sino, hay que usar la Tecnica M
         matriz = paso1(array, fObjetivo, condicion, MAXMIN, tecnicaM);
 
@@ -101,10 +105,10 @@ public class MetodoSimplex2 {
 
         if (!tecnicaM) {
             System.out.println("\nSe eliminan las M, para obtener la solución básica inicial...");
-            vArtificialFilas.forEach((a) -> {
-                System.out.println(a);
-            });
-            eliminarM(matriz, vArtificialFilas);
+//            vArtificialFilas.forEach((a) -> {
+//                //System.out.println(a);
+//            });
+            matriz = eliminarM(matriz, vArtificialFilas, MAXMIN);
 //            vArtificialIndice.forEach((a) -> {
 //                //matriz = ConvertirVariableEnBase(matriz, (matriz.length - 2), ((int) a));
 //                
@@ -163,13 +167,12 @@ public class MetodoSimplex2 {
             Luego de haber convertido las desigualdades en igualdades.
          */
         //Problema planteado inicialmente.
-        System.out.println("MAX Z = 5X1 + 8X2 +7X3\n"
-                + "        \n"
-                + "        S.A.R\n"
-                + "            3X1 + 3X2 + 3X3 <= 30\n"
-                + "                + 2X2 + 5X3 <= 30\n"
-                + "            4X1 + 4X2       <= 24\n\n");
-
+//        System.out.println("MAX Z = 5X1 + 8X2 +7X3\n"
+//                + "        \n"
+//                + "        S.A.R\n"
+//                + "            3X1 + 3X2 + 3X3 <= 30\n"
+//                + "                + 2X2 + 5X3 <= 30\n"
+//                + "            4X1 + 4X2       <= 24\n\n");
         //Vaciando los campos
         vHolguraIndice.removeAll(vHolguraIndice);
         vArtificialIndice.removeAll(vArtificialIndice);
@@ -474,7 +477,7 @@ public class MetodoSimplex2 {
         return suma;
     }
 
-    public static double[][] eliminarM(double[][] igualdades, ArrayList<Integer> artificiales) {
+    public static double[][] eliminarM(double[][] igualdades, ArrayList<Integer> artificiales, int MAXMIN) {
         double matrixEliminacion[][] = new double[artificiales.size()][igualdades[0].length];
         for (int x = 0; x < matrixEliminacion.length; x++) {
             for (int y = 0; y < matrixEliminacion[x].length; y++) {
@@ -501,11 +504,46 @@ public class MetodoSimplex2 {
             acumulador = 0;
         }
 
-        //System.out.println("Este es el vector que eliminará a M");
-        //System.out.println(Arrays.toString(vector));
-        //Por ultimo, hay que sumar el vector, en la matriz y retornar el valor
-        for (int j = 0; j < igualdades[0].length; j++) {
-            igualdades[(igualdades.length - 2)][j] = igualdades[(igualdades.length - 2)][j] + vector[j];
+
+        /*
+            DEBO HACER CODIGO PARA SOLUCIONAR EL PROBLEMA CON LA TECNICA M PARA 
+            MAXIMIZAR....
+            (EN LA FUNCIÓN, ELIMINAR M)
+         */
+
+        if (MAXMIN == 1) {
+
+            //MAXIMIZAR
+//            int x = vArtificialIndice.size();
+//            System.out.println("El tamañao es: " + x);
+//            for (int i = 0; i < igualdades.length - 2; i++) {
+//                System.out.println("Elemento en base --->  (X, y): (" + i + ", " + vArtificialIndice.get(i) + ") ");
+//                igualdades = ConvertirVariableEnBase(igualdades, i, vArtificialIndice.get(i));
+//            }
+//
+//            System.out.println("Esta es la matrix aux para MAX\n");
+//            System.out.println(Arrays.deepToString(igualdades).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+//            System.out.println("");
+
+            for(int i = 0; i<vector.length; i++){
+                vector[i] *= -1;
+            }
+            
+            System.out.println("Este es el vector que eliminará a M");
+            System.out.println(Arrays.toString(vector));
+
+            //Por ultimo, hay que sumar el vector, en la matriz y retornar el valor
+            for (int j = 0; j < igualdades[0].length; j++) {
+                igualdades[(igualdades.length - 2)][j] = igualdades[(igualdades.length - 2)][j] + vector[j];
+            }
+        } else {
+            System.out.println("Este es el vector que eliminará a M");
+            System.out.println(Arrays.toString(vector));
+
+            //Por ultimo, hay que sumar el vector, en la matriz y retornar el valor
+            for (int j = 0; j < igualdades[0].length; j++) {
+                igualdades[(igualdades.length - 2)][j] = igualdades[(igualdades.length - 2)][j] + vector[j];
+            }
         }
 
         //La matriz con M eliminada es: 
@@ -690,62 +728,11 @@ public class MetodoSimplex2 {
             }
         } else {
             //Se esta aplicando la Tecnica M, y hay que verificar dos columnas
-//            System.out.println("TECNICA M");
-//            OUTER:
-//            for (int j = 0; j < igualdades[0].length; j++) {
-//                double valor = (igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j];
-//                switch (MAXMIN) {
-//                    case 1://Maximización
-//
-//                        if (valor >= 0) {
-//
-//                            condicionZ = false;/*Si al terminar de revisar todos los
-//                        valores de Z, la condición continua siendo false, eso quiere
-//                        decir que ya encontramos la SOLUCIÓN FACTIBLE ÓPTIMA.
-//                             */
-//                        } else {
-//                            condicionZ = true;/*True indica que el valor es < 0
-//                        por lo que, si al evaluar cualquiera de los valores, uno
-//                        es negativo, eso nos indica que el algoritmo Simplex debe
-//                        seguir
-//                             */ break OUTER;
-//                            /*Ya no es necesario seguir evaluando los demás valores
-//                        entonces terminamos el bucle con la instrucción break;
-//                        porque seria redundante seguir comparando.
-//                             */
-//                        }
-//                        break;
-//                    case 2://Minimización
-//
-//                        if (valor <= 0) {
-//
-//                            condicionZ = false;/*True indica que el valor es > 0
-//                        por lo que, si al evaluar cualquiera de los valores, uno
-//                        es positivo, eso nos indica que el algoritmo Simplex debe
-//                        seguir
-//                             */
-//                        } else {
-//                            condicionZ = true;/*True indica que el valor es <= 0
-//                        por lo que, si al terminar de revisar todos los valores,
-//                        la condición se queda en false, eso nos indica que el
-//                        algoritmo Simplex debe terminar porque en ese momento,
-//                        habremos obtenido una SOLUCIÓN FACTIBLE ÓPTIMA.
-//                             */ break OUTER;
-//                            /*Ya no es necesario seguir evaluando los demás valores
-//                        entonces terminamos el bucle con la instrucción break;
-//                        porque seria redundante seguir comparando.
-//                             */
-//                        }
-//                        break;
-//                    default:
-//                        break OUTER; //Salir del bucle porque el usuario no ha definido si MAX o MIN.
-//                }
-//            }
 
-            boolean filaRES[] = new boolean[igualdades[0].length-1];
-            double[] vectorM = new double[igualdades[0].length-1];
-            double[] vectorZ = new double[igualdades[0].length-1];
-            double[] vectorRES = new double[igualdades[0].length-1];
+            boolean filaRES[] = new boolean[igualdades[0].length - 1];
+            double[] vectorM = new double[igualdades[0].length - 1];
+            double[] vectorZ = new double[igualdades[0].length - 1];
+            double[] vectorRES = new double[igualdades[0].length - 1];
 
             for (int i = 0; i < vectorZ.length; i++) {
                 vectorZ[i] = igualdades[(igualdades.length - 1)][i];
@@ -756,7 +743,7 @@ public class MetodoSimplex2 {
                 vectorRES[x] = (vectorM[x] * Math.pow(10, 6)) + vectorZ[x];
             }
 
-            System.out.println(Arrays.toString(vectorM));
+            //System.out.println(Arrays.toString(vectorM));
             for (int i = 0; i < vectorZ.length; i++) {
 
                 if (MAXMIN == 1) {
@@ -769,9 +756,8 @@ public class MetodoSimplex2 {
 
             }
 
-            System.out.println("FilaRES");
-            System.out.println(Arrays.toString(filaRES));
-
+//            System.out.println("FilaRES");
+//            System.out.println(Arrays.toString(filaRES));
             boolean M = false, Z = false;
             for (boolean a : filaRES) {
                 if (a) {
@@ -818,11 +804,12 @@ public class MetodoSimplex2 {
                     /*
                         valor más pequeño(MAXIMIZACIÓN)
                      */
-                    if (((igualdades[(igualdades.length - 2)][j] * Math.pow(10, 6)) + igualdades[(igualdades.length - 1)][j]) == mayorMenor.stream().mapToDouble(i -> i).min().getAsDouble()) {
+                    if (((igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j]) == mayorMenor.stream().mapToDouble(i -> i).min().getAsDouble()) {
                         numMayorMenor = (igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j];
                     }
                 }
 
+              
             } else if (MAXMIN == 2) {
 
                 for (int j = 0; j < igualdades[0].length - 1; j++) {
@@ -924,10 +911,10 @@ public class MetodoSimplex2 {
             if (igualdades[i][(filaPivote)] == 0) {
                 //Si el denominador es cero, devolver infinito
                 divisionMenorValor.add(Double.POSITIVE_INFINITY);
-                System.out.println((i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
                         + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
                         + ") = " + "Infinity");
-                procedimiento += "\n" + (i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
                         + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
                         + ") = " + "Infinity";
             } else {
@@ -937,10 +924,10 @@ public class MetodoSimplex2 {
                     //Validando que no se puedan tomar valores negativos
                     divisionMenor[i] = Double.POSITIVE_INFINITY;
                 }
-                System.out.println((i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
                         + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
                         + ") = " + divisionMenor[i]);
-                procedimiento += "\n" + (i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
                         + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
                         + ") = " + divisionMenor[i];
                 divisionMenorValor.add(divisionMenor[i]);
@@ -1186,4 +1173,3 @@ public class MetodoSimplex2 {
 
     }
 }
-

@@ -40,16 +40,18 @@ public class inter extends javax.swing.JFrame {
      * Creates new form inter
      */
     //Campos de clase
-    public static Fraction fraccion = new Fraction();//Instancia de la clase Fraction para convertir decimales a quebrados
+    public static Fraction fraccion = new Fraction(true);//Instancia de la clase Fraction para convertir decimales a quebrados
     public static int columnaPivote, filaPivote, MAXMIN;
     public static double[][] matriz;
     public static double[] fObjetivo;
     public static int[] condicion;
-    public static boolean condicionZ = false;
+    public static boolean condicionZ = false, tecnicaM = false;
     public static String procedimiento = "";
     //Nuevos campos de clase
     public static ArrayList<Integer> vHolguraIndice = new ArrayList<>();
     public static ArrayList<Integer> vArtificialIndice = new ArrayList<>();
+    //Filas
+    public static ArrayList<Integer> vArtificialFilas = new ArrayList<>();
 
     //Necesario para establecer el tamaño de la ventana
     Toolkit toolkit;
@@ -451,8 +453,11 @@ public class inter extends javax.swing.JFrame {
         //Traer todos los valores desde la interfaz grafica.
         procedimiento = "";
         //Ejecutar algoritmo SIMPLEX
-        matriz = paso1(antePaso(), fObjetivo, condicion, MAXMIN, verificarCondiciones(condicion));
-
+        antePaso();
+        tecnicaM = verificarCondiciones(condicion);//Si es false, todas son <=, sino, hay que usar la Tecnica M
+        matriz = paso1(antePaso(), fObjetivo, condicion, MAXMIN, tecnicaM);
+        
+        
         //Paso2 -->Mostrar matriz
         System.out.println("");
         System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
@@ -462,9 +467,26 @@ public class inter extends javax.swing.JFrame {
         procedimiento += Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]");
         this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
 
+        if (!tecnicaM) {
+            System.out.println("\nSe eliminan las M, para obtener la solución básica inicial...");
+            vArtificialFilas.forEach((a) -> {
+                System.out.println(a);
+            });
+            eliminarM(matriz, vArtificialFilas);
+//            vArtificialIndice.forEach((a) -> {
+//                //matriz = ConvertirVariableEnBase(matriz, (matriz.length - 2), ((int) a));
+//                
+//                //System.out.println(a);
+//                System.out.println((matriz.length - 2) + ", " + ((int) a));
+//            });
+            System.out.println("");
+            procedimiento += "\n";
+            System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+        }
+        
         try {
             //Paso3 --> Solucion basica inial
-            solBasicaInicial(matriz);
+            solBasicaInicial(matriz, tecnicaM);
             this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
         } catch (IOException ex) {
             System.out.println("Ocurrio un error en el paso 3:\n" + ex);
@@ -475,7 +497,7 @@ public class inter extends javax.swing.JFrame {
         System.out.println("Determinando si la funcion es optima...");
         procedimiento += "Determinando si la funcion es optima...";
         this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
         this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
 
         int iteracion = 1;
@@ -486,7 +508,7 @@ public class inter extends javax.swing.JFrame {
 
             try {
                 //paso5 --> Determinar variable de entrada
-                filaPivote = varEntrada(matriz, MAXMIN);
+                filaPivote = varEntrada(matriz, MAXMIN, tecnicaM);
                 this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
             } catch (IOException ex) {
                 System.out.println("Ocurrio un error en el paso 5:\n" + ex);
@@ -495,7 +517,7 @@ public class inter extends javax.swing.JFrame {
 
             try {
                 //paso6 --> Determinar variable de salida
-                columnaPivote = varSalida(matriz);
+                columnaPivote = varSalida(matriz, tecnicaM);
                 this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
             } catch (IOException ex) {
                 System.out.println("Ocurrio un error en el paso 6:\n" + ex);
@@ -519,13 +541,13 @@ public class inter extends javax.swing.JFrame {
                 System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
                 Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
             }
-            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN);
+            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
             this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
             iteracion++;
         }
 
         try {
-            comprobarZ(matriz, fObjetivo);
+            comprobarZ(matriz, fObjetivo, tecnicaM);
             this.txtProcedimiento.setText(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
         } catch (IOException ex) {
             System.out.println("Ocurrio un error en el paso final, comprobando Z:\n" + ex);
@@ -585,6 +607,7 @@ public class inter extends javax.swing.JFrame {
     }
 
     //FUNCIONES DEL MÉTODO SIMPLEX
+    
     public static double[][] paso1(double[][] array, double[] fObjetivo, int[] condicion, int MAXMIN, boolean menorOIgualQue) {
         /*
             Si menorOIgualque = true, no se ejecuta la penalización, 
@@ -596,12 +619,12 @@ public class inter extends javax.swing.JFrame {
             Luego de haber convertido las desigualdades en igualdades.
          */
         //Problema planteado inicialmente.
-        System.out.println("MAX Z = 5X1 + 8X2 +7X3\n"
-                + "        \n"
-                + "        S.A.R\n"
-                + "            3X1 + 3X2 + 3X3 <= 30\n"
-                + "                + 2X2 + 5X3 <= 30\n"
-                + "            4X1 + 4X2       <= 24\n\n");
+//        System.out.println("MAX Z = 5X1 + 8X2 +7X3\n"
+//                + "        \n"
+//                + "        S.A.R\n"
+//                + "            3X1 + 3X2 + 3X3 <= 30\n"
+//                + "                + 2X2 + 5X3 <= 30\n"
+//                + "            4X1 + 4X2       <= 24\n\n");
 
         //Vaciando los campos
         vHolguraIndice.removeAll(vHolguraIndice);
@@ -673,8 +696,8 @@ public class inter extends javax.swing.JFrame {
             System.out.println("Variables de holgura");
             procedimiento += "Variables de holgura\n";
             vHolguraIndice.forEach((Integer a) -> {
-                System.out.println("X" + a);
-                procedimiento += "X" + a + "\n";
+                System.out.println("X" + (a + 1));
+                procedimiento += "X" + (a + 1) + "\n";
             });
         }
 
@@ -682,8 +705,8 @@ public class inter extends javax.swing.JFrame {
             System.out.println("\nVariables artificiales");
             procedimiento += "\n\nVariables artificiales";
             vArtificialIndice.forEach((Integer b) -> {
-                System.out.println("X" + b);
-                procedimiento += "X" + b + "\n";
+                System.out.println("X" + (b + 1));
+                procedimiento += "X" + (b + 1) + "\n";
             });
         }
 
@@ -800,6 +823,14 @@ public class inter extends javax.swing.JFrame {
 
     public static boolean verificarCondiciones(int[] condicion) {
         boolean menorOIgual = false;
+        int pos = 0;
+        for (int k : condicion) {
+            //System.out.println(k);
+            if (k == 1 || k == 2) {
+                vArtificialFilas.add(pos);
+            }
+            pos++;
+        }
 
         for (int x : condicion) {
             if (x == 0) {
@@ -838,7 +869,6 @@ public class inter extends javax.swing.JFrame {
         }
 
         System.out.println(Arrays.deepToString(arrayFraction).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
-
         System.out.println("");
         procedimiento += "\n\n" + Arrays.deepToString(arrayFraction).replace("], ", "]\n").replace("[[", "[").replace("]]", "]") + "\n";
     }
@@ -898,6 +928,47 @@ public class inter extends javax.swing.JFrame {
             }
         }
         return suma;
+    }
+
+    public static double[][] eliminarM(double[][] igualdades, ArrayList<Integer> artificiales) {
+        double matrixEliminacion[][] = new double[artificiales.size()][igualdades[0].length];
+        for (int x = 0; x < matrixEliminacion.length; x++) {
+            for (int y = 0; y < matrixEliminacion[x].length; y++) {
+                matrixEliminacion[x][y] = igualdades[artificiales.get(x)][y];
+            }
+        }
+
+        System.out.println("Esta es la matrix para eliminar las M\n");
+        System.out.println(Arrays.deepToString(matrixEliminacion));
+
+        //Haciendo vector de eliminación
+        /*
+            Este vector, no es más que sumar las filas donde hay variables artificiales, 
+            TRUCO ENSEÑADO EN CLASE POR:
+            ING. HERBERTH, MoP
+         */
+        double vector[] = new double[matrixEliminacion[0].length];
+        double acumulador = 0;
+        for (int filas = 0; filas < matrixEliminacion[0].length; filas++) {
+            for (int columnas = 0; columnas < matrixEliminacion.length; columnas++) {
+                acumulador += matrixEliminacion[columnas][filas];
+            }
+            vector[filas] = acumulador;
+            acumulador = 0;
+        }
+
+        //System.out.println("Este es el vector que eliminará a M");
+        //System.out.println(Arrays.toString(vector));
+        //Por ultimo, hay que sumar el vector, en la matriz y retornar el valor
+        for (int j = 0; j < igualdades[0].length; j++) {
+            igualdades[(igualdades.length - 2)][j] = igualdades[(igualdades.length - 2)][j] + vector[j];
+        }
+
+        //La matriz con M eliminada es: 
+        //System.out.println("La matriz con M eliminada de Z es: ");
+        //System.out.println(Arrays.deepToString(igualdades));
+        //System.out.println("");
+        return igualdades;
     }
 
     public static double[][] determinarVarEnBase(double[][] igualdades, boolean mostrarVB) throws IOException {
@@ -965,7 +1036,7 @@ public class inter extends javax.swing.JFrame {
         return varBasicas;
     }
 
-    public static void solBasicaInicial(double array[][]) throws IOException {
+    public static void solBasicaInicial(double array[][], boolean tecnicaM) throws IOException {
         System.out.println("");
         System.out.println("SOLUCIÓN BÁSICA INICIAL");
         procedimiento += "\n\nSOLUCIÓN BÁSICA INICIAL\n";
@@ -984,15 +1055,39 @@ public class inter extends javax.swing.JFrame {
 
         for (int x = 0; x < Vbasicas.size(); x++) {
             System.out.print("X" + Vbasicas.get(x));
-            System.out.print(" = " + array[x][(array[x].length - 1)] + "\n");
-            procedimiento += "X" + Vbasicas.get(x) + " = " + array[x][(array[x].length - 1)] + "\n";
+            System.out.print(" = " + fraccion.fraction(array[x][(array[x].length - 1)]) + "\n");
+            procedimiento += "X" + Vbasicas.get(x) + " = " + fraccion.fraction(array[x][(array[x].length - 1)]) + "\n";
         }
-        System.out.print("Z = " + array[array.length - 1][(array[array.length - 1].length - 1)] + "\n\n");
-        procedimiento += "Z = " + array[array.length - 1][(array[array.length - 1].length - 1)] + "\n\n";
+        if (tecnicaM) {
+            System.out.print("Z = " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n");
+            procedimiento += "Z = " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n";
+        } else {
+            //System.out.println("tenica M");
 
+            if (array[array.length - 2][(array[array.length - 1].length - 1)] == 0) {//Si no hay M
+                System.out.print("Z = " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n");
+                procedimiento += "Z = " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n";
+            } else if (array[array.length - 1][(array[array.length - 1].length - 1)] == 0) {//Si hay M
+
+                System.out.print("Z = " + fraccion.fraction(array[array.length - 2][(array[array.length - 1].length - 1)]) + "M" + "\n\n");
+                procedimiento += "Z = " + fraccion.fraction(array[array.length - 2][(array[array.length - 1].length - 1)]) + "M" + "\n\n";
+            } else {
+                System.out.print("Z = " + fraccion.fraction(array[array.length - 2][(array[array.length - 1].length - 1)]) + "M");
+                procedimiento += "Z = " + fraccion.fraction(array[array.length - 2][(array[array.length - 1].length - 1)]) + "M";
+                if (array[array.length - 1][(array[array.length - 1].length - 1)] > 0) {
+                    System.out.print(" + " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n");
+                    procedimiento += " + " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n";
+                } else if (array[array.length - 1][(array[array.length - 1].length - 1)] < 0) {
+                    System.out.print(" " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n");
+                    procedimiento += " " + fraccion.fraction(array[array.length - 1][(array[array.length - 1].length - 1)]) + "\n\n";
+                }
+
+            }
+
+        }
     }
 
-    public static boolean comprobarFactibilidadZ(double igualdades[][], int MAXMIN) {
+    public static boolean comprobarFactibilidadZ(double igualdades[][], int MAXMIN, boolean tecnicaM) {
         boolean condicionZ = false;/*
             Arreglo de boolean, para determinar si si todos los valores son
             positivos o cero (MAX) o negativos o cero (MIN).
@@ -1001,52 +1096,151 @@ public class inter extends javax.swing.JFrame {
                 True indica que el bucle, va a continuar porque la condición
                 se cumple.
          */
-        OUTER:
-        for (int j = 0; j < igualdades[0].length; j++) {
-            switch (MAXMIN) {
-                case 1://Maximización
-                    if (igualdades[(igualdades.length - 1)][j] >= 0) {
+        if (tecnicaM) {
+            OUTER:
+            for (int j = 0; j < igualdades[0].length; j++) {
+                switch (MAXMIN) {
+                    case 1://Maximización
+                        if (igualdades[(igualdades.length - 1)][j] >= 0) {
 
-                        condicionZ = false;/*Si al terminar de revisar todos los
+                            condicionZ = false;/*Si al terminar de revisar todos los
                         valores de Z, la condición continua siendo false, eso quiere
                         decir que ya encontramos la SOLUCIÓN FACTIBLE ÓPTIMA.
-                         */
-                    } else {
-                        condicionZ = true;/*True indica que el valor es < 0
+                             */
+                        } else {
+                            condicionZ = true;/*True indica que el valor es < 0
                         por lo que, si al evaluar cualquiera de los valores, uno
                         es negativo, eso nos indica que el algoritmo Simplex debe
                         seguir
-                         */ break OUTER;
-                        /*Ya no es necesario seguir evaluando los demás valores
+                             */ break OUTER;
+                            /*Ya no es necesario seguir evaluando los demás valores
                         entonces terminamos el bucle con la instrucción break;
                         porque seria redundante seguir comparando.
-                         */
-                    }
-                    break;
-                case 2://Minimización
-                    if (igualdades[(igualdades.length - 1)][j] <= 0) {
+                             */
+                        }
+                        break;
+                    case 2://Minimización
+                        if (igualdades[(igualdades.length - 1)][j] <= 0) {
 
-                        condicionZ = false;/*True indica que el valor es > 0
+                            condicionZ = false;/*True indica que el valor es > 0
                         por lo que, si al evaluar cualquiera de los valores, uno
                         es positivo, eso nos indica que el algoritmo Simplex debe
                         seguir
-                         */
-                    } else {
-                        condicionZ = true;/*True indica que el valor es <= 0
+                             */
+                        } else {
+                            condicionZ = true;/*True indica que el valor es <= 0
                         por lo que, si al terminar de revisar todos los valores,
                         la condición se queda en false, eso nos indica que el
                         algoritmo Simplex debe terminar porque en ese momento,
                         habremos obtenido una SOLUCIÓN FACTIBLE ÓPTIMA.
-                         */ break OUTER;
-                        /*Ya no es necesario seguir evaluando los demás valores
+                             */ break OUTER;
+                            /*Ya no es necesario seguir evaluando los demás valores
                         entonces terminamos el bucle con la instrucción break;
                         porque seria redundante seguir comparando.
-                         */
-                    }
-                    break;
-                default:
-                    break OUTER; //Salir del bucle porque el usuario no ha definido si MAX o MIN.
+                             */
+                        }
+                        break;
+                    default:
+                        break OUTER; //Salir del bucle porque el usuario no ha definido si MAX o MIN.
+                }
             }
+        } else {
+            //Se esta aplicando la Tecnica M, y hay que verificar dos columnas
+//            System.out.println("TECNICA M");
+//            OUTER:
+//            for (int j = 0; j < igualdades[0].length; j++) {
+//                double valor = (igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j];
+//                switch (MAXMIN) {
+//                    case 1://Maximización
+//
+//                        if (valor >= 0) {
+//
+//                            condicionZ = false;/*Si al terminar de revisar todos los
+//                        valores de Z, la condición continua siendo false, eso quiere
+//                        decir que ya encontramos la SOLUCIÓN FACTIBLE ÓPTIMA.
+//                             */
+//                        } else {
+//                            condicionZ = true;/*True indica que el valor es < 0
+//                        por lo que, si al evaluar cualquiera de los valores, uno
+//                        es negativo, eso nos indica que el algoritmo Simplex debe
+//                        seguir
+//                             */ break OUTER;
+//                            /*Ya no es necesario seguir evaluando los demás valores
+//                        entonces terminamos el bucle con la instrucción break;
+//                        porque seria redundante seguir comparando.
+//                             */
+//                        }
+//                        break;
+//                    case 2://Minimización
+//
+//                        if (valor <= 0) {
+//
+//                            condicionZ = false;/*True indica que el valor es > 0
+//                        por lo que, si al evaluar cualquiera de los valores, uno
+//                        es positivo, eso nos indica que el algoritmo Simplex debe
+//                        seguir
+//                             */
+//                        } else {
+//                            condicionZ = true;/*True indica que el valor es <= 0
+//                        por lo que, si al terminar de revisar todos los valores,
+//                        la condición se queda en false, eso nos indica que el
+//                        algoritmo Simplex debe terminar porque en ese momento,
+//                        habremos obtenido una SOLUCIÓN FACTIBLE ÓPTIMA.
+//                             */ break OUTER;
+//                            /*Ya no es necesario seguir evaluando los demás valores
+//                        entonces terminamos el bucle con la instrucción break;
+//                        porque seria redundante seguir comparando.
+//                             */
+//                        }
+//                        break;
+//                    default:
+//                        break OUTER; //Salir del bucle porque el usuario no ha definido si MAX o MIN.
+//                }
+//            }
+
+            boolean filaRES[] = new boolean[igualdades[0].length-1];
+            double[] vectorM = new double[igualdades[0].length-1];
+            double[] vectorZ = new double[igualdades[0].length-1];
+            double[] vectorRES = new double[igualdades[0].length-1];
+
+            for (int i = 0; i < vectorZ.length; i++) {
+                vectorZ[i] = igualdades[(igualdades.length - 1)][i];
+                vectorM[i] = igualdades[(igualdades.length - 2)][i];
+            }
+
+            for (int x = 0; x < vectorRES.length; x++) {
+                vectorRES[x] = (vectorM[x] * Math.pow(10, 6)) + vectorZ[x];
+            }
+
+            System.out.println(Arrays.toString(vectorM));
+            for (int i = 0; i < vectorZ.length; i++) {
+
+                if (MAXMIN == 1) {
+                    //MAXIMIZACIÓN
+                    filaRES[i] = vectorRES[i] < 0;
+                } else if (MAXMIN == 2) {
+                    //MINIMIZACIÓN
+                    filaRES[i] = vectorRES[i] > 0;
+                }
+
+            }
+
+            System.out.println("FilaRES");
+            System.out.println(Arrays.toString(filaRES));
+
+            boolean M = false, Z = false;
+            for (boolean a : filaRES) {
+                if (a) {
+                    M = true;
+                }
+            }
+
+            if (M) {
+                condicionZ = true;
+            } else {
+                condicionZ = false;
+            }
+
         }
 
         if (condicionZ) {
@@ -1059,87 +1253,152 @@ public class inter extends javax.swing.JFrame {
         return condicionZ;
     }
 
-    public static int varEntrada(double[][] igualdades, int MAXMIN) throws IOException {
+    public static int varEntrada(double[][] igualdades, int MAXMIN, boolean tecnicaM) throws IOException {
         //Del paso 5, determinando la variable de entrada.
         ArrayList<Integer> varEntradaPosI = new ArrayList<>();
         ArrayList<Integer> varEntradaPosJ = new ArrayList<>();
         ArrayList<Double> mayorMenor = new ArrayList<>();
 
         double numMayorMenor = 0;
-        if (MAXMIN == 1) {
 
-            for (int j = 0; j < igualdades[0].length; j++) {
-                mayorMenor.add(igualdades[(igualdades.length - 1)][j]);
-            }
+        if (tecnicaM == false) {
+            //Se aplica la tecnica M
+            if (MAXMIN == 1) {
 
-            for (int j = 0; j < igualdades[0].length; j++) {
-                /*
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
+                    double valor = (igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j];
+                    mayorMenor.add(valor);
+                }
+
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
+                    /*
                         valor más pequeño(MAXIMIZACIÓN)
-                 */
-                if (igualdades[(igualdades.length - 1)][j] == mayorMenor.stream().mapToDouble(i -> i).min().getAsDouble()) {
-                    numMayorMenor = igualdades[(igualdades.length - 1)][j];
+                     */
+                    if (((igualdades[(igualdades.length - 2)][j] * Math.pow(10, 6)) + igualdades[(igualdades.length - 1)][j]) == mayorMenor.stream().mapToDouble(i -> i).min().getAsDouble()) {
+                        numMayorMenor = (igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j];
+                    }
                 }
-            }
 
-        } else if (MAXMIN == 2) {
+            } else if (MAXMIN == 2) {
 
-            for (int j = 0; j < igualdades[0].length; j++) {
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
 
-                mayorMenor.add(igualdades[(igualdades.length - 1)][j]);
-            }
+                    double valor = (igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j];
+                    mayorMenor.add(valor);
+                }
 
-            for (int j = 0; j < igualdades[0].length; j++) {
-                /*
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
+                    /*
                         valor más grande(MINIMIZACIÓN)
-                 */
-                if (igualdades[(igualdades.length - 1)][j] == mayorMenor.stream().mapToDouble(i -> i).max().getAsDouble()) {
-                    numMayorMenor = igualdades[(igualdades.length - 1)][j];
+                     */
+                    if (((igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j]) == mayorMenor.stream().mapToDouble(i -> i).max().getAsDouble()) {
+                        numMayorMenor = (igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j];
+                    }
+                }
+
+            }
+
+            for (int j = 0; j < igualdades[0].length; j++) {
+                if (((igualdades[(igualdades.length - 2)][j] * Math.pow(10, 2)) + igualdades[(igualdades.length - 1)][j]) == numMayorMenor) {/*
+                        obteniendo el par ordenado de la variable de entrada.
+                     */
+
+                    varEntradaPosI.add(igualdades[(igualdades.length - 1)].length);
+                    varEntradaPosJ.add(j);
                 }
             }
+            System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
+                    + " = " + fraccion.fraction(numMayorMenor));//Variable de entrada.
+            procedimiento += "\nLa variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
+                    + " = " + fraccion.fraction(numMayorMenor);
+        } else {
+            //Se aplica el método simplex normal
+            if (MAXMIN == 1) {
 
-        }
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
+                    mayorMenor.add(igualdades[(igualdades.length - 1)][j]);
+                }
 
-        for (int j = 0; j < igualdades[0].length; j++) {
-            if (igualdades[(igualdades.length - 1)][j] == numMayorMenor) {/*
-                        obteniendo el par ordenado de la variable de entrada.
-                 */
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
+                    /*
+                        valor más pequeño(MAXIMIZACIÓN)
+                     */
+                    if (igualdades[(igualdades.length - 1)][j] == mayorMenor.stream().mapToDouble(i -> i).min().getAsDouble()) {
+                        numMayorMenor = igualdades[(igualdades.length - 1)][j];
+                    }
+                }
 
-                varEntradaPosI.add(igualdades[(igualdades.length - 1)].length);
-                varEntradaPosJ.add(j);
+            } else if (MAXMIN == 2) {
+
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
+
+                    mayorMenor.add(igualdades[(igualdades.length - 1)][j]);
+                }
+
+                for (int j = 0; j < igualdades[0].length - 1; j++) {
+                    /*
+                        valor más grande(MINIMIZACIÓN)
+                     */
+                    if (igualdades[(igualdades.length - 1)][j] == mayorMenor.stream().mapToDouble(i -> i).max().getAsDouble()) {
+                        numMayorMenor = igualdades[(igualdades.length - 1)][j];
+                    }
+                }
+
             }
+
+            for (int j = 0; j < igualdades[0].length - 1; j++) {
+                if (igualdades[(igualdades.length - 1)][j] == numMayorMenor) {/*
+                        obteniendo el par ordenado de la variable de entrada.
+                     */
+
+                    varEntradaPosI.add(igualdades[(igualdades.length - 1)].length);
+                    varEntradaPosJ.add(j);
+                }
+            }
+            System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
+                    + " = " + fraccion.fraction(numMayorMenor));//Variable de entrada.
+            procedimiento += "\nLa variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
+                    + " = " + fraccion.fraction(numMayorMenor);
         }
-        System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
-                + " = " + fraccion.fraction(numMayorMenor));//Variable de entrada.
-        procedimiento += "\nLa variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
-                + " = " + fraccion.fraction(numMayorMenor);
         return (varEntradaPosJ.get(0));
     }
 
-    public static int varSalida(double[][] igualdades) throws IOException {
+    public static int varSalida(double[][] igualdades, boolean tecnicaM) throws IOException {
         double[] divisionMenor = new double[igualdades.length];
         ArrayList<Integer> varSalidaPosJ = new ArrayList<>();
 
         ArrayList<Double> divisionMenorValor = new ArrayList<>();
-        for (int i = 0; i < igualdades.length - 1 /*-1 para no considerar a Z*/; i++) {
+        int posConM = 0;
+        if (tecnicaM) {
+            posConM = 1;
+        } else {
+            System.out.println("Se usa una fila menos, por la \"M\"");
+            posConM = 2;
+        }
+        for (int i = 0; i < igualdades.length - posConM /*-1 para no considerar a Z*/; i++) {
 
             if (igualdades[i][(filaPivote)] == 0) {
                 //Si el denominador es cero, devolver infinito
                 divisionMenorValor.add(Double.POSITIVE_INFINITY);
-                System.out.println((i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
-                        + " = " + "Infinity");
-                procedimiento += "\n" + (i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
-                        + " = " + "Infinity";
+                System.out.println((i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + ") = " + "Infinity");
+                procedimiento += "\n" + (i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + ") = " + "Infinity";
             } else {
                 divisionMenor[i] = igualdades[i][(igualdades[0].length - 1)] / igualdades[i][(filaPivote)];
 
-                System.out.println((i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
-                        + " = " + divisionMenor[i]);
-                procedimiento += "\n" + (i + 1) + " : " + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + "/" + fraccion.fraction(igualdades[i][(filaPivote)])
-                        + " = " + divisionMenor[i];
+                if (divisionMenor[i] <= 0) {
+                    //Validando que no se puedan tomar valores negativos
+                    divisionMenor[i] = Double.POSITIVE_INFINITY;
+                }
+                System.out.println((i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + ") = " + divisionMenor[i]);
+                procedimiento += "\n" + (i + 1) + " : " + "(" +fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + ") = " + divisionMenor[i];
                 divisionMenorValor.add(divisionMenor[i]);
             }
         }
@@ -1164,8 +1423,8 @@ public class inter extends javax.swing.JFrame {
                 }
             }
         }
-        System.out.println("La variable de salida (Xs) es: " + "X" + varSalidaPosJ.get(0));
-        procedimiento += "\nLa variable de salida (Xs) es: " + "X" + varSalidaPosJ.get(0);
+        System.out.println("La variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1));
+        procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
         return varSalidaPosJ.get(0);
     }
 
@@ -1282,7 +1541,7 @@ public class inter extends javax.swing.JFrame {
         return Vbasicas;
     }
 
-    public static void comprobarZ(double[][] matrix, double[] ZObj) throws IOException {
+    public static void comprobarZ(double[][] matrix, double[] ZObj, boolean tecnicaM) throws IOException {
         //Probar el valor de Z
 
         double Z = 0;
@@ -1333,9 +1592,8 @@ public class inter extends javax.swing.JFrame {
 //            //System.out.println("Llave: " + a + " su valor es: " + hmaVB.get((int) a));
 //            x++;
 //        }
-
-        System.out.print("\nZ = ");
-        procedimiento += "\n\nZ = ";
+        System.out.print("Z = ");
+        procedimiento += "\nZ = ";
         for (int i = 0, k = 0; i < ZObj.length; i++) {
             if (hmapVB.containsKey((i + 1))) {
 
@@ -1345,8 +1603,10 @@ public class inter extends javax.swing.JFrame {
                         procedimiento += " + ";
                     }
                 }
+
                 System.out.print(fraccion.fraction(ZObj[i])
                         + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")");
+
                 Z += (ZObj[i] * hmapVB.get((i + 1)));
                 procedimiento += fraccion.fraction(ZObj[i])
                         + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")";
@@ -1354,15 +1614,39 @@ public class inter extends javax.swing.JFrame {
             }
         }
 
-        System.out.print(" = " + fraccion.fraction(Z) + "\n\n");
-        procedimiento += " = " + fraccion.fraction(Z) + "\n\n";
+        if (tecnicaM) {
+            System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+        } else {
+
+            if (matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)] == 0) {//Si no hay M
+                System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+                procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+            } else if (matrix[matrix.length - 1][(matrix[matrix.length - 1].length - 1)] == 0) {//Si hay M
+
+                System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
+                procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+            } else {
+                System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
+                if (Z > 0) {
+                    System.out.print(" + " + fraccion.fraction(Z) + "\n\n");
+                } else if (Z < 0) {
+                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+                }
+
+            }
+
+//            System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M "+ fraccion.fraction(Z) + "\n\n");
+//            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+        }
+
     }
 
     //CÓDIGO PARA OBTENER TODOS LOS VALORES MEDIANTE LA INTERFAZ GRAFICA
     public double[][] antePaso() {
         //Trayendo combobox MAXMIN
         String opcionMAXMIN = this.cbxMAXMIN.getModel().getSelectedItem().toString();
-        System.out.println(opcionMAXMIN);
+        //System.out.println(opcionMAXMIN);
         if (opcionMAXMIN.equals("MAXIMIZAR")) {
             MAXMIN = 1;
         } else {
@@ -1392,8 +1676,8 @@ public class inter extends javax.swing.JFrame {
         for (double a : fObjetivo) {
             System.out.println(a);
         }
-        System.out.println("La función objetivo que obtuve es:");
-        System.out.println(Arrays.toString(fObjetivo));
+        //System.out.println("La función objetivo que obtuve es:");
+        //System.out.println(Arrays.toString(fObjetivo));
 
         //Intetando obtener condiciones
         /*
@@ -1406,7 +1690,7 @@ public class inter extends javax.swing.JFrame {
         System.out.println("condiciones");
         int[] condicionAUX = new int[(int) spinnerRES.getModel().getValue()];
         for (int x = 0; x < this.jTableRestricciones.getRowCount(); x++) {
-            System.out.println(this.jTableRestricciones.getValueAt(x, (int) spinnerVD.getModel().getValue()));
+            //System.out.println(this.jTableRestricciones.getValueAt(x, (int) spinnerVD.getModel().getValue()));
 
             if (this.jTableRestricciones.getValueAt(x, (int) spinnerVD.getModel().getValue()).toString().equals("<=")) {
                 condicionAUX[x] = 0;
@@ -1417,8 +1701,8 @@ public class inter extends javax.swing.JFrame {
             }
         }
 
-        System.out.println("Las condiciones son: ");
-        System.out.println(Arrays.toString(condicionAUX));
+        //System.out.println("Las condiciones son: ");
+        //System.out.println(Arrays.toString(condicionAUX));
 
         condicion = condicionAUX;//asignando el valor al campo de clase
 
