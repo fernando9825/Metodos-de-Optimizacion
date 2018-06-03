@@ -5,6 +5,7 @@
  */
 package UI2;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
@@ -23,11 +24,14 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import metodosimplex.Fraction;
 
@@ -123,7 +127,8 @@ public class inter extends javax.swing.JFrame {
         Font fuente = new Font("Dialog", Font.BOLD, 14);
         jTableObjetivo.setFont(fuente);
         jTableRestricciones.setFont(fuente);
-        jTableSimplex.setFont(fuente);
+        Font fuente2 = new Font("Dialog", Font.BOLD, 12);
+        jTableSimplex.setFont(fuente2);
 
         //ESTABLECIENDO VALORES INICIALES DE LA TABLA SIMPLEX
         String[] tablaSimplex = {"Las variables apareceran aquí, cuando se resuelva su modelo"};
@@ -262,6 +267,12 @@ public class inter extends javax.swing.JFrame {
         jTableObjetivo.setModel(modelo1);
         jTableObjetivo.getTableHeader().setReorderingAllowed(false);
 
+//        //Listener para la tabla simplex
+//        this.jTableSimplex.addComponentListener(new ComponentAdapter() {
+//            public void componentResized(ComponentEvent e) {
+//                jTableSimplex.scrollRectToVisible(jTableSimplex.getCellRect(jTableSimplex.getRowCount() - 1, 0, true));
+//            }
+//        });
     }
 
     /**
@@ -461,20 +472,38 @@ public class inter extends javax.swing.JFrame {
 
         Thread t1 = new Thread(new Runnable() {
             public void run() {
+                /*Estableciendo un problema aquí. para no estarlo escribiendo en la interfaz grafica
+                
+                 */
+
+                MAXMIN = 1; //MAX
+//                MAXMIN = 2; //MIN
+                double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+                setfObjetivo(fObjetivo);
+                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+                    {1, 3, 4, 5, 7, 20},
+                    {0, 6, 7, 8, 0, 15},
+                    {7, 8, 0, 7, 9, 30},
+                    {7, 2, 1, 0, 8, 20}};
+
+                //        Problema de amaya
+                int[] condicion = new int[]{
+                    1,
+                    1,
+                    1,
+                    1};
+
+                //////////////////////FIN  DE ESTABLECER EL PROBLEMA//////////////////////////////
+                //////////////////////////////////////////////////////////////////////////////////
                 //Traer todos los valores desde la interfaz grafica.
                 procedimiento = "";
                 //Ejecutar algoritmo SIMPLEX
-                antePaso();
+                //antePaso();
                 tecnicaM = verificarCondiciones(condicion);//Si es false, todas son <=, sino, hay que usar la Tecnica M
-                matriz = paso1(antePaso(), fObjetivo, condicion, MAXMIN, tecnicaM);
+                matriz = paso1(/*antePaso()*/array, fObjetivo, condicion, MAXMIN, tecnicaM);
 
                 prepararTabla(matriz);//Preparar las columnas de la JTable
-                
-                try {
-                    TablaSimplexIteracion(matriz, tecnicaM);
-                } catch (IOException ex) {
-                    Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
-                }
+
                 //Paso2 -->Mostrar matriz
                 System.out.println("");
                 System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
@@ -502,6 +531,12 @@ public class inter extends javax.swing.JFrame {
                     actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
                 } catch (IOException ex) {
                     System.out.println("Ocurrio un error en el paso 3:\n" + ex);
+                    Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                try {//Mostrar la tabla simplex en la interfaz grafica
+                    TablaSimplexIteracion(matriz, tecnicaM);
+                } catch (IOException ex) {
                     Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
@@ -549,7 +584,7 @@ public class inter extends javax.swing.JFrame {
                     try {
                         mostrarMatriz(matriz);
                         actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-                        try {
+                        try {//Mostrar la tabla simplex en la interfaz grafica
                             TablaSimplexIteracion(matriz, tecnicaM);
                         } catch (IOException ex) {
                             Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
@@ -568,6 +603,12 @@ public class inter extends javax.swing.JFrame {
                     actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
                 } catch (IOException ex) {
                     System.out.println("Ocurrio un error en el paso final, comprobando Z:\n" + ex);
+                    Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                try {//Mostrar la tabla simplex en la interfaz grafica
+                    TablaSimplexIteracion(matriz, tecnicaM);
+                } catch (IOException ex) {
                     Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -717,11 +758,13 @@ public class inter extends javax.swing.JFrame {
                 System.out.println("X" + (a + 1));
                 procedimiento += "X" + (a + 1) + "\n";
             });
+            System.out.println("");
+            procedimiento += "\n\n";
         }
 
         if (!vArtificialIndice.isEmpty()) {
             System.out.println("\nVariables artificiales");
-            procedimiento += "\n\nVariables artificiales";
+            procedimiento += "Variables artificiales\n";
             vArtificialIndice.forEach((Integer b) -> {
                 System.out.println("X" + (b + 1));
                 procedimiento += "X" + (b + 1) + "\n";
@@ -1016,9 +1059,13 @@ public class inter extends javax.swing.JFrame {
         }
 
         //La matriz con M eliminada es: 
-        //System.out.println("La matriz con M eliminada de Z es: ");
-        //System.out.println(Arrays.deepToString(igualdades));
-        //System.out.println("");
+        System.out.println("La matriz con ceros en las VArt-base de Z es: ");
+        System.out.println(Arrays.deepToString(igualdades));
+        System.out.println("");
+        
+        procedimiento += "\n\nLa matriz con ceros en las VArt-base de Z es: ";
+        procedimiento += "\n\n" + Arrays.deepToString(igualdades).replace("], ", "]\n").replace("[[", "[").replace("]]", "]");
+                
         return igualdades;
     }
 
@@ -1426,30 +1473,7 @@ public class inter extends javax.swing.JFrame {
         procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
         return varSalidaPosJ.get(0);
     }
-
-    public static double[][] paso6(double[][] igualdades, int MAXMIN, boolean condicionZ) throws IOException {
-        if (condicionZ) {//Si no es óptimo, se ejecuta esto.-
-            igualdades = ConvertirVariableEnBase(igualdades, columnaPivote, filaPivote);
-            mostrarMatriz(igualdades);
-        } else {
-            switch (MAXMIN) {
-                case 1://Maximización
-                    System.out.println("Paso 5: \n\tTodos los valores son positivos o cero."
-                            + "\n\tla solución es óptima.");
-                    break;
-                case 2://Minimización
-                    System.out.println("Paso 5: \n\tTodos los valores son negativos o cero."
-                            + "\n\tla solución es óptima.");
-                    break;
-                default:
-                    break;
-            }
-            //System.out.println("Paso 5:");
-
-        }
-        return igualdades;
-    }
-
+    
     public static double[] determinarVarEnBaseValor(double[][] igualdades) {
 
         boolean esCero = false;
@@ -1745,7 +1769,7 @@ public class inter extends javax.swing.JFrame {
     public void TablaSimplexIteracion(double[][] matrix, boolean tecnicaM) throws IOException {
 
         LlenarTabla llenar = new LlenarTabla();
-       
+
         //Obtener las variables básicas
         double[][] VB = determinarVarEnBase(matrix, false);
         ArrayList<Integer> VBFila = new ArrayList<>();
@@ -1754,15 +1778,23 @@ public class inter extends javax.swing.JFrame {
             for (int j = 0; j < VB[i].length; j++) {
                 if (j != 0) {
                     y = (int) VB[i][j];
-                    VBFila.add((y+1));
+                    VBFila.add((y + 1));
                 }
             }
         }
 
         //Crear filas de la tabla simplex
-        Object[][] datosFila = new Object[matrix.length][(matrix[0].length + 1)];
+        int columnas, filas;
+        if (tecnicaM) {
+            columnas = matrix.length;
+            filas = matrix[0].length + 1;
+        } else {
+            columnas = matrix.length - 1;
+            filas = matrix[0].length + 1;
+        }
+        Object[][] datosFila = new Object[columnas][filas];
 
-        for (int i = 0; i < VB.length; i++) {
+        for (int i = 0; i < VBFila.size(); i++) {
             for (int j = 0, k = 0; j < matrix[i].length + 1; j++) {
                 if (j == 0) {
                     datosFila[i][j] = "X" + VBFila.get(i);
@@ -1773,56 +1805,97 @@ public class inter extends javax.swing.JFrame {
             }
         }
 
-       // System.out.println("El array de objetos...");
-       // System.out.println(Arrays.deepToString(datosFila));
-
+        // System.out.println("El array de objetos...");
+        // System.out.println(Arrays.deepToString(datosFila));
         //VectorMZ se encarga de unir la función objetivo, en caso tenga M y Z, sino solo guarda Z
         String[] vectorMZ = new String[matrix[0].length];
         datosFila[(datosFila.length - 1)][0] = "Z";
 
         for (int x = 0; x < vectorMZ.length; x++) {
             if (!tecnicaM) {
-                vectorMZ[x] = fraccion.fraction(matrix[(matrix.length - 2)][x]) + "M";
+                if (Math.round(matrix[(matrix.length - 2)][x]) != 0) {
+                    if (Math.round(matrix[(matrix.length - 2)][x]) % 1 == 0) {
+                        if ((Math.round(matrix[(matrix.length - 2)][x]) == 1.0)) {
+                            //Aqui solo si es 1.0
+                            vectorMZ[x] = "M";
+                        } else if (((Math.round(matrix[(matrix.length - 2)][x]) == -1.0))) {
+                            //Aqui solo si es -1.0
+                            vectorMZ[x] = "-M";
+                        } else {
+                            //En este caso puede ser o no entero, para lo cual el siguiente codigo
+                            if (Math.round(matrix[(matrix.length - 2)][x]) % 1 == 0) {
+                                try{
+                                    if(Double.parseDouble(fraccion.fraction(matrix[(matrix.length - 2)][x])) %1 == 0){
+                                        vectorMZ[x] = fraccion.fraction(matrix[(matrix.length - 2)][x]) + "M";
+                                    }
+                                }catch(Exception e){
+                                    vectorMZ[x] = "(" +fraccion.fraction(matrix[(matrix.length - 2)][x]) + ")M";
+                                }
+                                
+                                
+                            } else {
+                                vectorMZ[x] = "(" + fraccion.fraction(matrix[(matrix.length - 2)][x]) + ")M";
+                            }
+                            //vectorMZ[x] = "(" + fraccion.fraction(matrix[(matrix.length - 2)][x]) + ")M";
+                        }
+                    } else {
+                        //Aqui definitivamente no es un numero entero
+                        vectorMZ[x] = "(" + fraccion.fraction(matrix[(matrix.length - 2)][x]) + ")M";
+                    }
 
-                if (matrix[(matrix.length - 1)][x] > 0) {
-                    vectorMZ[x] += " + " + fraccion.fraction(matrix[(matrix.length - 1)][x]);
+                    //AQUI HEMOS TERMINADO DE AÑADIR LA M, AHORA EL TERMINO INDEPENDIENTE
+                    if (matrix[(matrix.length - 1)][x] > 0) {
+                        vectorMZ[x] += " + " + fraccion.fraction(matrix[(matrix.length - 1)][x]);
+                    }
+                } else {
+                    vectorMZ[x] = fraccion.fraction(matrix[(matrix.length - 1)][x]);
                 }
+
             } else {
+
+                //Si todas las restricciones son <=
                 vectorMZ[x] = fraccion.fraction(matrix[(matrix.length - 1)][x]);
             }
         }
 
+        System.out.println("Impriimiendo vectorMZ");
+        System.out.println(Arrays.toString(vectorMZ));
+
         for (int j = 0, k = 0; j < vectorMZ.length + 1; j++) {
             if (j == 0) {
-                datosFila[datosFila.length - 1][j] = "Z";
+                datosFila[(datosFila.length - 1)][j] = "Z";
             } else {
-                datosFila[datosFila.length - 1][j] = vectorMZ[k];
+                datosFila[(datosFila.length - 1)][j] = vectorMZ[k];
                 k++;
             }
         }
-        //System.out.println("El array de objetos...");
-        //System.out.println(Arrays.deepToString(datosFila));
 
-        
+        System.out.println("El array de objetos...");
+        System.out.println(Arrays.deepToString(datosFila));
+
         Object[][] datosReturn = new Object[(datosFila.length + 1)][(datosFila[0].length)];
 
         for (int i = 0; i < datosReturn.length; i++) {
             for (int j = 0; j < datosReturn[i].length; j++) {
-                if (i == (datosReturn.length-1)) {
-                    datosReturn[i][j] = "-----";
-                    
+                if (i == (datosReturn.length - 1)) {
+                    datosReturn[i][j] = "-";
+
                 } else {
                     datosReturn[i][j] = datosFila[i][j];
                 }
             }
         }
-        
+
         System.out.println(Arrays.deepToString(datosReturn));
-        
-        for(Object[] a:datosReturn){
+
+        for (Object[] a : datosReturn) {
             llenar.Llenar(tableModel, a);
+
         }
-        
+
+        resizeColumnWidth(this.jTableSimplex);//se encarga de ajustar las columnas al contenido 
+        scrollToVisible(this.jTableSimplex, this.jTableSimplex.getModel().getRowCount() - 1, 0);//Se encarga de desplazar el JTable al final
+
     }
 
     private String[] tablaSimplexCabeceras(int longitud) {
@@ -1839,13 +1912,11 @@ public class inter extends javax.swing.JFrame {
                 columnasTabla[i] = "X" + i;
             }
         }
-        
-        
-        
+
         return columnasTabla;
     }
-    
-    private void prepararTabla(double[][] matrix){
+
+    private void prepararTabla(double[][] matrix) {
         String[] cabecera = tablaSimplexCabeceras(matrix[0].length);
         Object[][] datos = new Object[0][matrix[0].length];
         for (int i = 0; i < datos.length; i++) {
@@ -1854,25 +1925,45 @@ public class inter extends javax.swing.JFrame {
             }
         }
         Object[] header = new Object[cabecera.length];
-        for(int i = 0; i<header.length; i++){
+        for (int i = 0; i < header.length; i++) {
             header[i] = cabecera[i];
-            
+
         }
-        
+
         tableModel = new DefaultTableModel();
-        for(Object a:header){
+        for (Object a : header) {
             tableModel.addColumn(a);
         }
         this.jTableSimplex.setModel(tableModel);
-        
-//        JTable table1 = new JTable(datos, cabecera);
-//        TableModel modelo1 = table1.getModel();
-//        jTableObjetivo.setModel(modelo1);
-//        jTableObjetivo.getTableHeader().setReorderingAllowed(false);
-//        //Evitando que la Jtabla pueda intercambiar columnas
-//        this.jTableSimplex.getTableHeader().setReorderingAllowed(false);
+
     }
 
+    //STACKOVERFLOW
+    public void resizeColumnWidth(JTable table) {
+        final TableColumnModel columnModel = table.getColumnModel();
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int width = 30; // Min width
+            for (int row = 0; row < table.getRowCount(); row++) {
+                TableCellRenderer renderer = table.getCellRenderer(row, column);
+                Component comp = table.prepareRenderer(renderer, row, column);
+                width = Math.max(comp.getPreferredSize().width + 1, width);
+            }
+            if (width > 300) {
+                width = 300;
+            }
+            columnModel.getColumn(column).setPreferredWidth(width);
+        }
+
+    }
+
+    public void scrollToVisible(final JTable table, final int rowIndex, final int vColIndex) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                table.scrollRectToVisible(table.getCellRect(rowIndex, vColIndex, false));
+            }
+        });
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnResolver;

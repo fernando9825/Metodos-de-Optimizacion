@@ -80,12 +80,12 @@ public class MetodoSimplex2 {
 //            1 ---->  (=)
 //            2 ---->  (>=)
 //         */
-//        //Problema de amaya
-////        int[] condicion = new int[]{
-////            2,
-////            0,
-////            1,
-////            0};
+////        Problema de amaya
+//        int[] condicion = new int[]{
+//            2,
+//            0,
+//            1,
+//            0};
 //        int[] condicion = new int[]{
 //            0,
 //            0,
