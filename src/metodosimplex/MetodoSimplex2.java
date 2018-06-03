@@ -34,125 +34,116 @@ public class MetodoSimplex2 {
     //Filas
     public static ArrayList<Integer> vArtificialFilas = new ArrayList<>();
 
-
     public static void main(String[] args) throws IOException {
 
-//        new inter().setVisible(true);
-        MAXMIN = 1; //MAX
-        //MAXMIN = 2; //MIN
-        //Restricciones
-
-        //Problema de amaya
-        double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-        setfObjetivo(fObjetivo);
-        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-            {1, 3, 4, 5, 7, 20},
-            {0, 6, 7, 8, 0, 15},
-            {7, 8, 0, 7, 9, 30},
-            {7, 2, 1, 0, 8, 20}};
-
-//        //PROBLEMA CON TODO TIPO DE DESIGUALDADES
-//        double[] fObjetivo = {7, 8, 13, 6};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-//        setfObjetivo(fObjetivo);
-//        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-//            {3, 2, 6, 1, 28},
-//            {2, 3, 5, 2, 35},
-//            {4, 1, 5, 1, 27}};
-//        
-//        int[] condicion = new int[]{
-//            2,
-//            1,
-//            0};
-//        double[] fObjetivo = {20, 40};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-//        setfObjetivo(fObjetivo);
-//        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-//            {1, 3, 9},
-//            {2, 1, 8},};
-//        double[] fObjetivo = {-3, 8};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-//        setfObjetivo(fObjetivo);
-//        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-//            {4, 1, 13},
-//            {2, 3, 6},};
+        new inter().setVisible(true);
+//        MAXMIN = 1; //MAX
+//        //MAXMIN = 2; //MIN
+//        //Restricciones
 //
-        /*
-           CONDICIÓN DE LAS RESTRICCIONES:
-        
-            0 ---->  (<=)
-            1 ---->  (=)
-            2 ---->  (>=)
-         */
-        //Problema de amaya
+//        //Problema de amaya
+//        double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//        setfObjetivo(fObjetivo);
+//        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//            {1, 3, 4, 5, 7, 20},
+//            {0, 6, 7, 8, 0, 15},
+//            {7, 8, 0, 7, 9, 30},
+//            {7, 2, 1, 0, 8, 20}};
+//
+////        //PROBLEMA CON TODO TIPO DE DESIGUALDADES
+////        double[] fObjetivo = {7, 8, 13, 6};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+////        setfObjetivo(fObjetivo);
+////        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+////            {3, 2, 6, 1, 28},
+////            {2, 3, 5, 2, 35},
+////            {4, 1, 5, 1, 27}};
+////        
+////        int[] condicion = new int[]{
+////            2,
+////            1,
+////            0};
+////        double[] fObjetivo = {20, 40};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+////        setfObjetivo(fObjetivo);
+////        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+////            {1, 3, 9},
+////            {2, 1, 8},};
+////        double[] fObjetivo = {-3, 8};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+////        setfObjetivo(fObjetivo);
+////        double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+////            {4, 1, 13},
+////            {2, 3, 6},};
+////
+//        /*
+//           CONDICIÓN DE LAS RESTRICCIONES:
+//        
+//            0 ---->  (<=)
+//            1 ---->  (=)
+//            2 ---->  (>=)
+//         */
+//        //Problema de amaya
+////        int[] condicion = new int[]{
+////            2,
+////            0,
+////            1,
+////            0};
 //        int[] condicion = new int[]{
-//            2,
 //            0,
-//            1,
+//            0,
+//            2,
 //            0};
-        int[] condicion = new int[]{
-            2,
-            0,
-            2,
-            0};
-        tecnicaM = verificarCondiciones(condicion);//Si es false, todas son <=, sino, hay que usar la Tecnica M
-        matriz = paso1(array, fObjetivo, condicion, MAXMIN, tecnicaM);
-
-        //Paso2 -->Mostrar matriz
-        System.out.println("");
-        procedimiento += "\n";
-        System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
-
-        //Agregando la Matriz al procedimiento
-        procedimiento += Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]");
-
-        if (!tecnicaM) {
-            System.out.println("\nSe eliminan las M, para obtener la solución básica inicial...");
-//            vArtificialFilas.forEach((a) -> {
-//                //System.out.println(a);
-//            });
-            matriz = eliminarM(matriz, vArtificialFilas, MAXMIN);
-//            vArtificialIndice.forEach((a) -> {
-//                //matriz = ConvertirVariableEnBase(matriz, (matriz.length - 2), ((int) a));
-//                
-//                //System.out.println(a);
-//                System.out.println((matriz.length - 2) + ", " + ((int) a));
-//            });
-            System.out.println("");
-            procedimiento += "\n";
-            System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
-        }
-
-        //Paso3 --> Solucion basica inial
-        solBasicaInicial(matriz, tecnicaM);
-
-        //Paso4 -->Determinar si la funcion es optima
-        System.out.println("Determinando si la funcion es optima...");
-        procedimiento += "Determinando si la funcion es optima...";
-        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
-
-        int iteracion = 1;
-        while (condicionZ) {
-            System.out.println("Iteración: " + iteracion);
-            procedimiento += "\nIteración: " + iteracion;
-            //paso5 --> Determinar variable de entrada
-            filaPivote = varEntrada(matriz, MAXMIN, tecnicaM);
-
-            //paso6 --> Determinar variable de salida
-            columnaPivote = varSalida(matriz, tecnicaM);
-
-            /////////ELEMEMTO PIVOTE//////////////////////////////
-            System.out.println("Variable de entrada con posición: " + (filaPivote + 1));
-            System.out.println("Variable de salida con posición: " + (columnaPivote + 1));
-            System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
-            procedimiento += "\nVariable de entrada con posición: " + (filaPivote + 1)
-                    + "\n" + "Variable de salida con posición: " + (columnaPivote + 1)
-                    + "\n" + "A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote];
-            matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
-            mostrarMatriz(matriz);
-            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
-
-            iteracion++;
-        }
-
-        comprobarZ(matriz, fObjetivo, tecnicaM);
+//        tecnicaM = verificarCondiciones(condicion);//Si es false, todas son <=, sino, hay que usar la Tecnica M
+//        matriz = paso1(array, fObjetivo, condicion, MAXMIN, tecnicaM);
+//
+//        //Paso2 -->Mostrar matriz
+//        System.out.println("");
+//        procedimiento += "\n";
+//        System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+//
+//        //Agregando la Matriz al procedimiento
+//        procedimiento += Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]");
+//
+//        if (!tecnicaM) {
+//            System.out.println("\nSe eliminan las M, para obtener la solución básica inicial...");
+//            procedimiento += "\nSe eliminan las M, para obtener la solución básica inicial...";
+//            System.out.println("");
+//            procedimiento += "\n";
+//            System.out.println(Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
+//            procedimiento += Arrays.deepToString(matriz).replace("], ", "]\n").replace("[[", "[").replace("]]", "]");
+//        }
+//
+//        //Paso3 --> Solucion basica inial
+//        solBasicaInicial(matriz, tecnicaM);
+//
+//        //Paso4 -->Determinar si la funcion es optima
+//        System.out.println("Determinando si la funcion es optima...");
+//        procedimiento += "Determinando si la funcion es optima...";
+//        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
+//
+//        int iteracion = 1;
+//        while (condicionZ) {
+//            System.out.println("Iteración: " + iteracion);
+//            procedimiento += "\nIteración: " + iteracion;
+//            //paso5 --> Determinar variable de entrada
+//            filaPivote = varEntrada(matriz, MAXMIN, tecnicaM);
+//
+//            //paso6 --> Determinar variable de salida
+//            columnaPivote = varSalida(matriz, tecnicaM);
+//
+//            /////////ELEMEMTO PIVOTE//////////////////////////////
+//            System.out.println("Variable de entrada con posición: " + (filaPivote + 1));
+//            System.out.println("Variable de salida con posición: " + (columnaPivote + 1));
+//            System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
+//            procedimiento += "\nVariable de entrada con posición: " + (filaPivote + 1)
+//                    + "\n" + "Variable de salida con posición: " + (columnaPivote + 1)
+//                    + "\n" + "A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote];
+//            matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
+//            mostrarMatriz(matriz);
+//            condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
+//
+//            iteracion++;
+//        }
+//
+//        comprobarZ(matriz, fObjetivo, tecnicaM);
 
     }
 
@@ -510,7 +501,6 @@ public class MetodoSimplex2 {
             MAXIMIZAR....
             (EN LA FUNCIÓN, ELIMINAR M)
          */
-
         if (MAXMIN == 1) {
 
             //MAXIMIZAR
@@ -524,11 +514,10 @@ public class MetodoSimplex2 {
 //            System.out.println("Esta es la matrix aux para MAX\n");
 //            System.out.println(Arrays.deepToString(igualdades).replace("], ", "]\n").replace("[[", "[").replace("]]", "]"));
 //            System.out.println("");
-
-            for(int i = 0; i<vector.length; i++){
+            for (int i = 0; i < vector.length; i++) {
                 vector[i] *= -1;
             }
-            
+
             System.out.println("Este es el vector que eliminará a M");
             System.out.println(Arrays.toString(vector));
 
@@ -809,7 +798,6 @@ public class MetodoSimplex2 {
                     }
                 }
 
-              
             } else if (MAXMIN == 2) {
 
                 for (int j = 0; j < igualdades[0].length - 1; j++) {
@@ -1158,12 +1146,13 @@ public class MetodoSimplex2 {
                 System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
                 procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
             } else {
-                System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
-                if (Z > 0) {
-                    System.out.print(" + " + fraccion.fraction(Z) + "\n\n");
-                } else if (Z < 0) {
-                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
-                }
+                //System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
+//                if (Z > 0) {
+//                    System.out.print(" + " + fraccion.fraction(Z) + "\n\n");
+//                } else if (Z < 0) {
+//                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+//                }
+                System.out.print(" = " + fraccion.fraction(Z) + "\n\n");
 
             }
 
