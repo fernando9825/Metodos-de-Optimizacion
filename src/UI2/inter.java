@@ -84,6 +84,7 @@ public class inter extends javax.swing.JFrame {
 
     public inter() {
         initComponents();
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);//a pantalla completa
         this.setTitle("Método SIMPLEX - Fernando Alvarado - UES-FMO");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension dimension = new Dimension();
@@ -96,6 +97,10 @@ public class inter extends javax.swing.JFrame {
         System.out.println("alto: " + (int) (alto * porcentajeScreen));
         this.setSize((int) (ancho * porcentajeScreen), (int) (alto * porcentajeScreen));
         this.setLocationRelativeTo(null);
+
+        //quitando botón de soluciones multiples
+        this.solMultiple.setEnabled(false);
+        this.solMultiple.setVisible(false);
 
         //haciendo pruebas
         //Creando tabla de función Objetivo
@@ -127,7 +132,7 @@ public class inter extends javax.swing.JFrame {
         Font fuente = new Font("Dialog", Font.BOLD, 14);
         jTableObjetivo.setFont(fuente);
         jTableRestricciones.setFont(fuente);
-        Font fuente2 = new Font("Dialog", Font.BOLD, 12);
+        Font fuente2 = new Font("Dialog", Font.BOLD, 16);
         jTableSimplex.setFont(fuente2);
 
         //ESTABLECIENDO VALORES INICIALES DE LA TABLA SIMPLEX
@@ -303,6 +308,7 @@ public class inter extends javax.swing.JFrame {
         jScrollPane4 = new javax.swing.JScrollPane();
         jTableSimplex = new javax.swing.JTable();
         jButton1 = new javax.swing.JButton();
+        solMultiple = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -384,6 +390,13 @@ public class inter extends javax.swing.JFrame {
             }
         });
 
+        solMultiple.setText("Sol múltiple");
+        solMultiple.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                solMultipleActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -412,7 +425,8 @@ public class inter extends javax.swing.JFrame {
                                 .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(8, 8, 8)
-                        .addComponent(jLabel5)))
+                        .addComponent(jLabel5))
+                    .addComponent(solMultiple))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE)
@@ -427,7 +441,7 @@ public class inter extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 58, Short.MAX_VALUE)
@@ -453,7 +467,9 @@ public class inter extends javax.swing.JFrame {
                                 .addComponent(btnResolver))
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(1, 1, 1)
-                                .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 54, Short.MAX_VALUE)))))
+                                .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(solMultiple)))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel5)
@@ -461,7 +477,7 @@ public class inter extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 178, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -469,7 +485,16 @@ public class inter extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnResolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResolverActionPerformed
+        //Estableciendo variables en su valor inicial;
+        condicionZ = false;
+        tecnicaM = false;
+        vHolguraIndice.removeAll(vHolguraIndice);
+        vArtificialIndice.removeAll(vArtificialIndice);
+        vArtificialFilas.removeAll(vArtificialFilas);
 
+        //quitando botón de soluciones multiples
+        solMultiple.setEnabled(false);
+        solMultiple.setVisible(false);
         Thread t1 = new Thread(new Runnable() {
             public void run() {
                 /*Estableciendo un problema aquí. para no estarlo escribiendo en la interfaz grafica
@@ -478,20 +503,32 @@ public class inter extends javax.swing.JFrame {
 
                 MAXMIN = 1; //MAX
 //                MAXMIN = 2; //MIN
-                double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                setfObjetivo(fObjetivo);
+//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//                    {1, 3, 4, 5, 7, 20},
+//                    {0, 6, 7, 8, 0, 15},
+//                    {7, 8, 0, 7, 9, 30},
+//                    {7, 2, 1, 0, 8, 20}};
+//
+//                //        Problema de amaya
+//                int[] condicion = new int[]{
+//                    1,
+//                    1,
+//                    1,
+//                    1};
+
+                //PROBLEMA CON SOLUCIONES MÚLTIPLES
+                double[] fObjetivo = {6, 8, 4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
                 setfObjetivo(fObjetivo);
                 double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-                    {1, 3, 4, 5, 7, 20},
-                    {0, 6, 7, 8, 0, 15},
-                    {7, 8, 0, 7, 9, 30},
-                    {7, 2, 1, 0, 8, 20}};
+                    {3, 4, 2, 18},
+                    {4, 5, 1, 20}};
 
                 //        Problema de amaya
                 int[] condicion = new int[]{
-                    1,
-                    1,
-                    1,
-                    1};
+                    0,
+                    0};
 
                 //////////////////////FIN  DE ESTABLECER EL PROBLEMA//////////////////////////////
                 //////////////////////////////////////////////////////////////////////////////////
@@ -606,14 +643,22 @@ public class inter extends javax.swing.JFrame {
                     Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-                try {//Mostrar la tabla simplex en la interfaz grafica
-                    TablaSimplexIteracion(matriz, tecnicaM);
+
+
+                //Aqui se verifica si el problema tiene soluciones múltiples
+                //Este método da pie a comprobar las soluciones multiples...
+                //Buscando variables no basicas
+                System.out.println("VARIABLES NO BÁSICAS");
+                try {
+                    System.out.println(determinarVarNOBasicas(matriz, tecnicaM));
                 } catch (IOException ex) {
                     Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+
         });
         t1.start();
+
 
     }//GEN-LAST:event_btnResolverActionPerformed
 
@@ -631,6 +676,22 @@ public class inter extends javax.swing.JFrame {
             jTableSimplex.removeEditor();
         }
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void solMultipleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_solMultipleActionPerformed
+
+        try {
+            solucionesMultiples(matriz, MAXMIN, tecnicaM);
+            actualizarProcedimiento(procedimiento);
+        } catch (IOException ex) {
+            Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {//Mostrar la tabla simplex en la interfaz grafica
+                TablaSimplexIteracion(matriz, tecnicaM);
+            } catch (IOException ex) {
+                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+    }//GEN-LAST:event_solMultipleActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1062,10 +1123,10 @@ public class inter extends javax.swing.JFrame {
         System.out.println("La matriz con ceros en las VArt-base de Z es: ");
         System.out.println(Arrays.deepToString(igualdades));
         System.out.println("");
-        
+
         procedimiento += "\n\nLa matriz con ceros en las VArt-base de Z es: ";
         procedimiento += "\n\n" + Arrays.deepToString(igualdades).replace("], ", "]\n").replace("[[", "[").replace("]]", "]");
-                
+
         return igualdades;
     }
 
@@ -1242,54 +1303,7 @@ public class inter extends javax.swing.JFrame {
                         break OUTER; //Salir del bucle porque el usuario no ha definido si MAX o MIN.
                 }
             }
-        } else {
-            //Se esta aplicando la Tecnica M, y hay que verificar dos columnas
-
-            boolean filaRES[] = new boolean[igualdades[0].length - 1];
-            double[] vectorM = new double[igualdades[0].length - 1];
-            double[] vectorZ = new double[igualdades[0].length - 1];
-            double[] vectorRES = new double[igualdades[0].length - 1];
-
-            for (int i = 0; i < vectorZ.length; i++) {
-                vectorZ[i] = igualdades[(igualdades.length - 1)][i];
-                vectorM[i] = igualdades[(igualdades.length - 2)][i];
-            }
-
-            for (int x = 0; x < vectorRES.length; x++) {
-                vectorRES[x] = (vectorM[x] * Math.pow(10, 6)) + vectorZ[x];
-            }
-
-            //System.out.println(Arrays.toString(vectorM));
-            for (int i = 0; i < vectorZ.length; i++) {
-
-                if (MAXMIN == 1) {
-                    //MAXIMIZACIÓN
-                    filaRES[i] = vectorRES[i] < 0;
-                } else if (MAXMIN == 2) {
-                    //MINIMIZACIÓN
-                    filaRES[i] = vectorRES[i] > 0;
-                }
-
-            }
-
-//            System.out.println("FilaRES");
-//            System.out.println(Arrays.toString(filaRES));
-            boolean M = false, Z = false;
-            for (boolean a : filaRES) {
-                if (a) {
-                    M = true;
-                }
-            }
-
-            if (M) {
-                condicionZ = true;
-            } else {
-                condicionZ = false;
-            }
-
-        }
-
-        if (condicionZ) {
+        } else if (condicionZ) {
             System.out.println("No es óptima");
             procedimiento += "\nNo es óptima";
         } else {
@@ -1353,10 +1367,8 @@ public class inter extends javax.swing.JFrame {
                     varEntradaPosJ.add(j);
                 }
             }
-            System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
-                    + " = " + fraccion.fraction(numMayorMenor));//Variable de entrada.
-            procedimiento += "\nLa variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1)
-                    + " = " + fraccion.fraction(numMayorMenor);
+            System.out.println("La variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1));//Variable de entrada.
+            procedimiento += "\nLa variable de entrada (Xe) es: " + "X" + (varEntradaPosJ.get(0) + 1);
         } else {
             //Se aplica el método simplex normal
             if (MAXMIN == 1) {
@@ -1473,7 +1485,7 @@ public class inter extends javax.swing.JFrame {
         procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
         return varSalidaPosJ.get(0);
     }
-    
+
     public static double[] determinarVarEnBaseValor(double[][] igualdades) {
 
         boolean esCero = false;
@@ -1585,36 +1597,6 @@ public class inter extends javax.swing.JFrame {
         //Ordenando variables básicas
         Collections.sort(keys);//Aqui ya esta ordenadas
 
-        //Creando un contadores, para saber si es la primera iteración, y agregar o no, un signo(concatenado).
-//        int x = 0;
-//
-//        System.out.print("\nZ = ");
-//        procedimiento += "\n\nZ = ";
-//        for (Object a : keys) {
-//
-//            if (x == ZObj.length) {
-//                //Nos salimos del bucle, porque ya se evaluó la función objetivo.
-//                //si hubiese más variables, serian, de holgura o de exceso.
-//                break;
-//            }
-//            if ((x != 0)) {
-//                if (hmapVB.get((int) a) > 0) {
-//                    System.out.print(" + ");
-//                    procedimiento += " + ";
-//                }
-//            }
-//
-//            if (x == (int) a) {
-//                System.out.print(fraccion.fraction(ZObj[x])
-//                        + "(" + fraccion.fraction(hmapVB.get((int) a)) + ")");
-//                Z += (ZObj[x] * hmapVB.get((int) a));
-//                procedimiento += fraccion.fraction(ZObj[x])
-//                        + "(" + fraccion.fraction(hmapVB.get((int) a)) + ")";
-//            }
-//
-//            //System.out.println("Llave: " + a + " su valor es: " + hmaVB.get((int) a));
-//            x++;
-//        }
         System.out.print("Z = ");
         procedimiento += "\nZ = ";
         for (int i = 0, k = 0; i < ZObj.length; i++) {
@@ -1664,6 +1646,131 @@ public class inter extends javax.swing.JFrame {
 //            System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M "+ fraccion.fraction(Z) + "\n\n");
 //            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
         }
+
+    }
+
+    public static HashMap<Integer, Double> determinarVarNOBasicas(double[][] matrix, boolean tecnicaM) throws IOException {
+        HashMap<Integer, String> hmapNVB = new HashMap<>();
+        HashMap<Integer, String> hmapVB = new HashMap<>();
+        HashMap<Integer, Double> hmapNVBDouble = new HashMap<>();
+        ArrayList<Integer> subIndiceVB = VBasicasSubIndice(matrix);
+
+        for (int x = 0; x < subIndiceVB.size(); x++) {
+            hmapVB.put(subIndiceVB.get(x), "X" + (subIndiceVB.get(x)));
+        }
+
+        int[] columnasTabla = new int[matrix[0].length - 1];
+
+        for (int i = 0; i < columnasTabla.length; i++) {
+            columnasTabla[i] = i;
+            hmapNVB.put((i + 1), "X" + (i + 1));
+        }
+
+        for (int a : columnasTabla) {
+            if (hmapVB.containsKey(a)) {
+                hmapNVB.remove(a);
+            }
+        }
+
+        System.out.println(hmapNVB);
+        //Obteniendo las llaves del hmap
+        List keys = new ArrayList(hmapNVB.keySet());
+        //Ordenando variables básicas
+        Collections.sort(keys);//Aqui ya esta ordenadas
+
+        double valor = 0;
+        for (int i = 0; i < keys.size(); i++) {
+
+            if (tecnicaM) {
+                valor = matrix[(matrix.length - 1)][((int) keys.get(i) - 1)];
+            } else {
+                if ((Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)]) == 0.0) && (Math.round(matrix[(matrix.length - 1)][(int) keys.get(i)]) == 0.0)) {
+                    valor = 0.0;
+                }
+            }
+            hmapNVBDouble.put((int) keys.get(i), valor);
+        }
+
+        //Obteniendo las llaves del hmap
+        List keysAUX = new ArrayList(hmapNVBDouble.keySet());
+        //Ordenando variables básicas
+        Collections.sort(keys);//Aqui ya esta ordenadas
+        for (int i = 0; i < hmapNVBDouble.size(); i++) {
+            if (hmapNVBDouble.get((int) keysAUX.get(i)) == 0.0) {
+                solMultiple.setEnabled(true);
+                solMultiple.setVisible(true);
+            }
+        }
+        return hmapNVBDouble;
+    }
+
+    public void solucionesMultiples(double[][] igualdades, int MAXMIN, boolean tecnicaM) throws IOException {
+        HashMap<Integer, Double> hmapNVBDouble = new HashMap<>();
+        HashMap<Integer, Double> hmapNVBDoubleAUX = new HashMap<>();
+        hmapNVBDouble = determinarVarNOBasicas(igualdades, tecnicaM);
+
+        List keysAUX = new ArrayList(hmapNVBDouble.keySet());
+        //Ordenando variables básicas
+        Collections.sort(keysAUX);//Aqui ya esta ordenadas
+        //Eliminando elementos que pueden alterar la función objetivo
+        for (int i = 0; i < hmapNVBDouble.size(); i++) {
+            if (hmapNVBDouble.get((int) keysAUX.get(i)) == 0.0) {
+                hmapNVBDoubleAUX.put((int) keysAUX.get(i), 0.0);
+            }
+        }
+
+        List keys = new ArrayList(hmapNVBDoubleAUX.keySet());
+        //Ordenando variables básicas
+        Collections.sort(keys);//Aqui ya esta ordenadas
+        String opciones = "";
+        for (int i = 0; i < keys.size(); i++) {
+            if (i != keys.size() - 1) {
+                opciones += "X" + keys.get(i).toString() + ", ";
+            } else {
+                opciones += "X" + keys.get(i).toString();
+            }
+
+        }
+        String eleccion = "";
+        do {
+            eleccion = JOptionPane.showInputDialog(this, "¿Qué variable desea sacar?\n" + opciones + "\nEscriba el número entero");
+            try {
+                Double.parseDouble(eleccion);
+                if (hmapNVBDoubleAUX.containsKey(Integer.parseInt(eleccion))) {
+                    break;
+                } else {
+                    JOptionPane.showMessageDialog(this, "Por favor, elija entre las variables disponibles");
+                }
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Por favor, solo ingrese números");
+            }
+
+        } while (true);
+        System.out.println("Ha elegido usar X" + Integer.parseInt(eleccion));
+        procedimiento += "\n\nHa elegido usar X" + Integer.parseInt(eleccion);
+        actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+        filaPivote = (Integer.parseInt(eleccion)-1);
+        columnaPivote = varSalida(igualdades, tecnicaM);
+        
+        System.out.println("Columna pivote" + columnaPivote);
+        System.out.println("Fila pivote" + filaPivote);
+        matriz = ConvertirVariableEnBase(igualdades, columnaPivote, filaPivote);
+
+        try {
+            System.out.println("\nObteniendo una nueva solución...");
+            procedimiento += "\nObteniendo una nueva solución...\n";
+            actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+            mostrarMatriz(matriz);
+            actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+            
+        } catch (IOException ex) {
+            System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
+            Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        comprobarZ(matriz, fObjetivo, tecnicaM);
+        actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
 
     }
 
@@ -1824,15 +1931,14 @@ public class inter extends javax.swing.JFrame {
                         } else {
                             //En este caso puede ser o no entero, para lo cual el siguiente codigo
                             if (Math.round(matrix[(matrix.length - 2)][x]) % 1 == 0) {
-                                try{
-                                    if(Double.parseDouble(fraccion.fraction(matrix[(matrix.length - 2)][x])) %1 == 0){
+                                try {
+                                    if (Double.parseDouble(fraccion.fraction(matrix[(matrix.length - 2)][x])) % 1 == 0) {
                                         vectorMZ[x] = fraccion.fraction(matrix[(matrix.length - 2)][x]) + "M";
                                     }
-                                }catch(Exception e){
-                                    vectorMZ[x] = "(" +fraccion.fraction(matrix[(matrix.length - 2)][x]) + ")M";
+                                } catch (Exception e) {
+                                    vectorMZ[x] = "(" + fraccion.fraction(matrix[(matrix.length - 2)][x]) + ")M";
                                 }
-                                
-                                
+
                             } else {
                                 vectorMZ[x] = "(" + fraccion.fraction(matrix[(matrix.length - 2)][x]) + ")M";
                             }
@@ -1982,8 +2088,9 @@ public class inter extends javax.swing.JFrame {
     public javax.swing.JTable jTableObjetivo;
     public javax.swing.JTable jTableRestricciones;
     public javax.swing.JTable jTableSimplex;
+    private static javax.swing.JButton solMultiple;
     public javax.swing.JSpinner spinnerRES;
     public javax.swing.JSpinner spinnerVD;
-    public javax.swing.JTextArea txtProcedimiento;
+    public static javax.swing.JTextArea txtProcedimiento;
     // End of variables declaration//GEN-END:variables
 }
