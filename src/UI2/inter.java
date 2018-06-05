@@ -50,13 +50,17 @@ public class inter extends javax.swing.JFrame {
     public static double[][] matriz;
     public static double[] fObjetivo;
     public static int[] condicion;
-    public static boolean condicionZ = false, tecnicaM = false;
+    public static boolean condicionZ = false, tecnicaM = false, solIlim = false;
     public static String procedimiento = "";
     //Nuevos campos de clase
     public static ArrayList<Integer> vHolguraIndice = new ArrayList<>();
     public static ArrayList<Integer> vArtificialIndice = new ArrayList<>();
     //Filas
     public static ArrayList<Integer> vArtificialFilas = new ArrayList<>();
+
+    //Valor arbitrario de tetha(si es que hay sol ilimitada)
+    static int n = 10000;//Limite de teta
+    static int teta = (int) (Math.random() * n) + 1;
 
     //Necesario para establecer el tamaño de la ventana
     Toolkit toolkit;
@@ -518,17 +522,28 @@ public class inter extends javax.swing.JFrame {
 //                    1,
 //                    1};
 
-                //PROBLEMA CON SOLUCIONES MÚLTIPLES
-                double[] fObjetivo = {6, 8, 4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                //PROBLEMA CON SOLUCIONES MÚLTIPLES
+//                double[] fObjetivo = {6, 8, 4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                setfObjetivo(fObjetivo);
+//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//                    {3, 4, 2, 18},
+//                    {4, 5, 1, 20}};
+//
+//                //   Restricciones con sol multiples
+//                int[] condicion = new int[]{
+//                    0, 
+//                    0};
+                //PROBLEMA CON SOLUCIONES Ilimitadas //MAX
+                double[] fObjetivo = {4, 4, 3};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
                 setfObjetivo(fObjetivo);
                 double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-                    {3, 4, 2, 18},
-                    {4, 5, 1, 20}};
+                    {3, -4, 1, 2},
+                    {2, 0, 2, 12}};
 
-                //        Problema de amaya
+                //   Restricciones con sol Ilimitadas
                 int[] condicion = new int[]{
-                    0,
-                    0};
+                    1,
+                    2};
 
                 //////////////////////FIN  DE ESTABLECER EL PROBLEMA//////////////////////////////
                 //////////////////////////////////////////////////////////////////////////////////
@@ -608,31 +623,41 @@ public class inter extends javax.swing.JFrame {
                         Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    /////////ELEMEMTO PIVOTE//////////////////////////////
-                    System.out.println("Variable de entrada con valor: " + (columnaPivote + 1));
-                    System.out.println("Variable de salida con valor: " + (filaPivote + 1));
-                    System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
-                    procedimiento += "\nVariable de entrada con valor: " + (columnaPivote + 1)
-                            + "\n" + "Variable de salida con valor: " + (filaPivote + 1)
-                            + "\n" + "A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote];
-                    actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-                    matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
-
-                    try {
-                        mostrarMatriz(matriz);
+                    if (!solIlim) {
+                        /////////ELEMEMTO PIVOTE//////////////////////////////
+                        System.out.println("Variable de entrada con valor: " + (columnaPivote + 1));
+                        System.out.println("Variable de salida con valor: " + (filaPivote + 1));
+                        System.out.println("A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote]);
+                        procedimiento += "\nVariable de entrada con valor: " + (columnaPivote + 1)
+                                + "\n" + "Variable de salida con valor: " + (filaPivote + 1)
+                                + "\n" + "A" + (columnaPivote + 1) + (filaPivote + 1) + " = " + matriz[columnaPivote][filaPivote];
                         actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-                        try {//Mostrar la tabla simplex en la interfaz grafica
-                            TablaSimplexIteracion(matriz, tecnicaM);
+                        matriz = ConvertirVariableEnBase(matriz, columnaPivote, filaPivote);
+
+                        try {
+
+                            mostrarMatriz(matriz);
+                            actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+                            try {//Mostrar la tabla simplex en la interfaz grafica
+                                TablaSimplexIteracion(matriz, tecnicaM);
+                            } catch (IOException ex) {
+                                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         } catch (IOException ex) {
+                            System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
                             Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } catch (IOException ex) {
-                        System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
-                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                        condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
+                        actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+                        iteracion++;
+                    } else {
+                        //TENEMOS SOLUCIONES ILIMITADAS, TERMINAMOS EL BUCLE
+                        condicionZ = false;
+                        solMultiple.setEnabled(true);
+                        solMultiple.setVisible(true);
+                        solMultiple.setText("calcular nueva solución");
                     }
-                    condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
-                    actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-                    iteracion++;
+
                 }
 
                 try {
@@ -642,8 +667,6 @@ public class inter extends javax.swing.JFrame {
                     System.out.println("Ocurrio un error en el paso final, comprobando Z:\n" + ex);
                     Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-
 
                 //Aqui se verifica si el problema tiene soluciones múltiples
                 //Este método da pie a comprobar las soluciones multiples...
@@ -679,18 +702,29 @@ public class inter extends javax.swing.JFrame {
 
     private void solMultipleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_solMultipleActionPerformed
 
-        try {
-            solucionesMultiples(matriz, MAXMIN, tecnicaM);
-            actualizarProcedimiento(procedimiento);
-        } catch (IOException ex) {
-            Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {//Mostrar la tabla simplex en la interfaz grafica
-                TablaSimplexIteracion(matriz, tecnicaM);
-            } catch (IOException ex) {
-                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        Thread t1 = new Thread(new Runnable() {
+            public void run() {
 
+                if (solIlim) {
+                    try {
+                        //Si tenemos soluciones ilimitadas
+                        calcularNuevalSolI();
+                    } catch (IOException ex) {
+                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    //Si tenemos múltiples soluciones
+                    try {
+                        solucionesMultiples(matriz, MAXMIN, tecnicaM);
+                        actualizarProcedimiento(procedimiento);
+                    } catch (IOException ex) {
+                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+            }
+        });
+        t1.start();
     }//GEN-LAST:event_solMultipleActionPerformed
 
     /**
@@ -1303,7 +1337,54 @@ public class inter extends javax.swing.JFrame {
                         break OUTER; //Salir del bucle porque el usuario no ha definido si MAX o MIN.
                 }
             }
-        } else if (condicionZ) {
+        } else {
+            //Se esta aplicando la Tecnica M, y hay que verificar dos columnas
+
+            boolean filaRES[] = new boolean[igualdades[0].length - 1];
+            double[] vectorM = new double[igualdades[0].length - 1];
+            double[] vectorZ = new double[igualdades[0].length - 1];
+            double[] vectorRES = new double[igualdades[0].length - 1];
+
+            for (int i = 0; i < vectorZ.length; i++) {
+                vectorZ[i] = igualdades[(igualdades.length - 1)][i];
+                vectorM[i] = igualdades[(igualdades.length - 2)][i];
+            }
+
+            for (int x = 0; x < vectorRES.length; x++) {
+                vectorRES[x] = (vectorM[x] * Math.pow(10, 6)) + vectorZ[x];
+            }
+
+            //System.out.println(Arrays.toString(vectorM));
+            for (int i = 0; i < vectorZ.length; i++) {
+
+                if (MAXMIN == 1) {
+                    //MAXIMIZACIÓN
+                    filaRES[i] = vectorRES[i] < 0;
+                } else if (MAXMIN == 2) {
+                    //MINIMIZACIÓN
+                    filaRES[i] = vectorRES[i] > 0;
+                }
+
+            }
+
+//            System.out.println("FilaRES");
+//            System.out.println(Arrays.toString(filaRES));
+            boolean M = false, Z = false;
+            for (boolean a : filaRES) {
+                if (a) {
+                    M = true;
+                }
+            }
+
+            if (M) {
+                condicionZ = true;
+            } else {
+                condicionZ = false;
+            }
+
+        }
+
+        if (condicionZ) {
             System.out.println("No es óptima");
             procedimiento += "\nNo es óptima";
         } else {
@@ -1424,7 +1505,8 @@ public class inter extends javax.swing.JFrame {
     public static int varSalida(double[][] igualdades, boolean tecnicaM) throws IOException {
         double[] divisionMenor = new double[igualdades.length];
         ArrayList<Integer> varSalidaPosJ = new ArrayList<>();
-
+        //ArrayList para determinar las soluciones ilimitadas
+        ArrayList<Double> solIlimitadas = new ArrayList<>();
         ArrayList<Double> divisionMenorValor = new ArrayList<>();
         int posConM = 0;
         if (tecnicaM) {
@@ -1438,6 +1520,7 @@ public class inter extends javax.swing.JFrame {
             if (igualdades[i][(filaPivote)] == 0) {
                 //Si el denominador es cero, devolver infinito
                 divisionMenorValor.add(Double.POSITIVE_INFINITY);
+                solIlimitadas.add(Double.POSITIVE_INFINITY);//Esta variable permite identificar las soluciones ilimitadas
                 System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
                         + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
                         + ") = " + "Infinity");
@@ -1450,6 +1533,7 @@ public class inter extends javax.swing.JFrame {
                 if (divisionMenor[i] <= 0) {
                     //Validando que no se puedan tomar valores negativos
                     divisionMenor[i] = Double.POSITIVE_INFINITY;
+                    //solIlimitadas.add(Double.POSITIVE_INFINITY);//Esta variable permite identificar las soluciones ilimitadas
                 }
                 System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
                         + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
@@ -1458,7 +1542,9 @@ public class inter extends javax.swing.JFrame {
                         + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
                         + ") = " + divisionMenor[i];
                 divisionMenorValor.add(divisionMenor[i]);
+                solIlimitadas.add(divisionMenor[i]);//Esta variable permite identificar las soluciones ilimitadas
             }
+
         }
 
         for (int k = 0; k < divisionMenor.length; k++) {
@@ -1481,8 +1567,34 @@ public class inter extends javax.swing.JFrame {
                 }
             }
         }
-        System.out.println("La variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1));
-        procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
+
+        //Determinando si existen soluciones ilimtadas
+        int x = 0;
+        for (int i = 0; i < solIlimitadas.size(); i++) {
+            if (solIlimitadas.get(i) == Double.POSITIVE_INFINITY) {
+                x++;
+            }
+//            if(solIlimitadas.get(i) < 0){
+//                x++;
+//            }
+            System.out.println("sol I" + solIlimitadas.get(i));
+        }
+        System.out.println("Tamaño de solIlimitadas: " + solIlimitadas.size());
+        if (x == (solIlimitadas.size())) {
+            solIlim = true;
+        }
+
+        if (solIlim) {
+            System.out.println("Estamos en el caso de las soluciones ilimitadas");
+            System.out.println("No se puede determinar variable de entrada");
+            procedimiento += "\n\nEstamos en el caso de las soluciones ilimitadas"
+                    + "\nNo se puede determinar variable de entrada";
+
+        } else {
+            System.out.println("La variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1));
+            procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
+        }
+
         return varSalidaPosJ.get(0);
     }
 
@@ -1578,75 +1690,139 @@ public class inter extends javax.swing.JFrame {
 
     public static void comprobarZ(double[][] matrix, double[] ZObj, boolean tecnicaM) throws IOException {
         //Probar el valor de Z
-
         double Z = 0;
         HashMap<Integer, Double> hmapVB = new HashMap<>();
         ArrayList<Integer> subIndiceVB = VBasicasSubIndice(matrix);
 
-        System.out.println("La solución es: ");
-        procedimiento += "\nLa solución es: \n";
-        for (int x = 0; x < subIndiceVB.size(); x++) {
-            System.out.print("X" + subIndiceVB.get(x));
-            hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)]);
-            System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
-            procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
-        }
+        //Aqui va la parte de soluciones ilimitadas
+        if (solIlim) {
 
-        //Obteniendo las llaves del hmap
-        List keys = new ArrayList(hmapVB.keySet());
-        //Ordenando variables básicas
-        Collections.sort(keys);//Aqui ya esta ordenadas
-
-        System.out.print("Z = ");
-        procedimiento += "\nZ = ";
-        for (int i = 0, k = 0; i < ZObj.length; i++) {
-            if (hmapVB.containsKey((i + 1))) {
-
-                if ((k != 0)) {
-                    if (hmapVB.get((i + 1)) > 0) {
-                        System.out.print(" + ");
-                        procedimiento += " + ";
-                    }
-                }
-
-                System.out.print(fraccion.fraction(ZObj[i])
-                        + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")");
-
-                Z += (ZObj[i] * hmapVB.get((i + 1)));
-                procedimiento += fraccion.fraction(ZObj[i])
-                        + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")";
-                k++;
+            System.out.println("El valor de tetha es: " + teta);
+            System.out.println("La solución es: ");
+            procedimiento += "\nLa solución es: \n";
+            for (int x = 0; x < subIndiceVB.size(); x++) {
+                System.out.print("X" + subIndiceVB.get(x));
+                hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)] - (teta * matrix[x][filaPivote]));
+                System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
+                procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
             }
-        }
 
-        if (tecnicaM) {
-            System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
-            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
-        } else {
+            //Agregar la nueva variable de entrada
+            System.out.println("X" + (filaPivote + 1) + " = " + teta);
+            procedimiento += "X" + (filaPivote + 1) + " = " + teta + "\n";
+            hmapVB.put((filaPivote + 1), Double.parseDouble(Integer.toString(teta)));
 
-            if (matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)] == 0) {//Si no hay M
+            //Realizar el mismo proceso que se hace cuando hay solución factible óptima
+            //Obteniendo las llaves del hmap
+            List keys = new ArrayList(hmapVB.keySet());
+            //Ordenando variables básicas
+            Collections.sort(keys);//Aqui ya esta ordenadas
+
+            System.out.print("Z = ");
+            procedimiento += "\nZ = ";
+            Z = matrix[(matrix.length - 1)][(matrix[0].length - 1)];
+
+            //DEBO REVISAR ESTO
+            if (MAXMIN == 1) {
+                //Maximizar
+                Z -= (matrix[(matrix.length - 1)][filaPivote] * teta);
+            } else {
+                Z += (matrix[(matrix.length - 1)][filaPivote] * teta);
+            }
+
+            if (tecnicaM) {
                 System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
                 procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
-            } else if (matrix[matrix.length - 1][(matrix[matrix.length - 1].length - 1)] == 0) {//Si hay M
-
-                System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
-                procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
             } else {
-                //System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
+
+                if (matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)] == 0) {//Si no hay M
+                    System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+                    procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                } else if (matrix[matrix.length - 1][(matrix[matrix.length - 1].length - 1)] == 0) {//Si hay M
+
+                    System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
+                    procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                } else {
+                    //System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
 //                if (Z > 0) {
 //                    System.out.print(" + " + fraccion.fraction(Z) + "\n\n");
 //                } else if (Z < 0) {
 //                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
 //                }
-                System.out.print(" = " + fraccion.fraction(Z) + "\n\n");
-                procedimiento += " = " + fraccion.fraction(Z) + "\n\n";
+                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+                    procedimiento += " " + fraccion.fraction(Z) + "\n\n";
 
-            }
+                }
 
 //            System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M "+ fraccion.fraction(Z) + "\n\n");
 //            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
-        }
+            }
 
+        } else {
+
+            System.out.println("La solución es: ");
+            procedimiento += "\nLa solución es: \n";
+            for (int x = 0; x < subIndiceVB.size(); x++) {
+                System.out.print("X" + subIndiceVB.get(x));
+                hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)]);
+                System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
+                procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
+            }
+            //Obteniendo las llaves del hmap
+            List keys = new ArrayList(hmapVB.keySet());
+            //Ordenando variables básicas
+            Collections.sort(keys);//Aqui ya esta ordenadas
+
+            System.out.print("Z = ");
+            procedimiento += "\nZ = ";
+            for (int i = 0, k = 0; i < ZObj.length; i++) {
+                if (hmapVB.containsKey((i + 1))) {
+
+                    if ((k != 0)) {
+                        if (hmapVB.get((i + 1)) > 0) {
+                            System.out.print(" + ");
+                            procedimiento += " + ";
+                        }
+                    }
+
+                    System.out.print(fraccion.fraction(ZObj[i])
+                            + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")");
+
+                    Z += (ZObj[i] * hmapVB.get((i + 1)));
+                    procedimiento += fraccion.fraction(ZObj[i])
+                            + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")";
+                    k++;
+                }
+            }
+
+            if (tecnicaM) {
+                System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+                procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+            } else {
+
+                if (matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)] == 0) {//Si no hay M
+                    System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+                    procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                } else if (matrix[matrix.length - 1][(matrix[matrix.length - 1].length - 1)] == 0) {//Si hay M
+
+                    System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
+                    procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                } else {
+                    //System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
+//                if (Z > 0) {
+//                    System.out.print(" + " + fraccion.fraction(Z) + "\n\n");
+//                } else if (Z < 0) {
+//                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+//                }
+                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+                    procedimiento += " " + fraccion.fraction(Z) + "\n\n";
+
+                }
+
+//            System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M "+ fraccion.fraction(Z) + "\n\n");
+//            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+            }
+        }
     }
 
     public static HashMap<Integer, Double> determinarVarNOBasicas(double[][] matrix, boolean tecnicaM) throws IOException {
@@ -1669,6 +1845,7 @@ public class inter extends javax.swing.JFrame {
         for (int a : columnasTabla) {
             if (hmapVB.containsKey(a)) {
                 hmapNVB.remove(a);
+                System.out.println("Eliminando variable básica de VNB: " + a);
             }
         }
 
@@ -1679,14 +1856,19 @@ public class inter extends javax.swing.JFrame {
         Collections.sort(keys);//Aqui ya esta ordenadas
 
         double valor = 0;
+        System.out.println("Keys Size: " + keys.size());
         for (int i = 0; i < keys.size(); i++) {
 
             if (tecnicaM) {
+                System.out.println("sin usar la M, sol Multiple");
                 valor = matrix[(matrix.length - 1)][((int) keys.get(i) - 1)];
             } else {
-                if ((Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)]) == 0.0) && (Math.round(matrix[(matrix.length - 1)][(int) keys.get(i)]) == 0.0)) {
-                    valor = 0.0;
-                }
+                //if ((Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)]) == 0.0) && ((matrix[(matrix.length - 1)][(int) keys.get(i)]) == 0.0)) {
+                System.out.println("USANDO la M, sol Multiple");
+                System.out.println("M: " + (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)])));
+                System.out.println("I: " + (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)])));
+                valor = (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)])) + (matrix[(matrix.length - 1)][(int) keys.get(i)]);
+                //}
             }
             hmapNVBDouble.put((int) keys.get(i), valor);
         }
@@ -1696,9 +1878,27 @@ public class inter extends javax.swing.JFrame {
         //Ordenando variables básicas
         Collections.sort(keys);//Aqui ya esta ordenadas
         for (int i = 0; i < hmapNVBDouble.size(); i++) {
+            if (hmapNVBDouble.get((int) keysAUX.get(i)) != 0.0) {
+                hmapNVBDouble.remove((int) keys.get(i));
+            }
+        }
+
+        keysAUX.removeAll(keysAUX);
+        keysAUX = new ArrayList(hmapNVBDouble.keySet());
+        for (int i = 0; i < hmapNVBDouble.size(); i++) {
             if (hmapNVBDouble.get((int) keysAUX.get(i)) == 0.0) {
                 solMultiple.setEnabled(true);
                 solMultiple.setVisible(true);
+            } else {
+                //Si no es cero, entonces no se muestra el boton, y se cierra este bucle
+                System.out.println("NO EXISTEN SOLUCIONES MÚLTIPLES");
+                solMultiple.setEnabled(false);
+                solMultiple.setVisible(false);
+                if (solIlim) {
+                    solMultiple.setEnabled(true);
+                    solMultiple.setVisible(true);
+                }
+                break;
             }
         }
         return hmapNVBDouble;
@@ -1732,46 +1932,60 @@ public class inter extends javax.swing.JFrame {
 
         }
         String eleccion = "";
+        boolean error = true;
         do {
             eleccion = JOptionPane.showInputDialog(this, "¿Qué variable desea sacar?\n" + opciones + "\nEscriba el número entero");
             try {
                 Double.parseDouble(eleccion);
                 if (hmapNVBDoubleAUX.containsKey(Integer.parseInt(eleccion))) {
+                    error = false;
                     break;
                 } else {
                     JOptionPane.showMessageDialog(this, "Por favor, elija entre las variables disponibles");
                 }
 
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Por favor, solo ingrese números");
+                if (!(eleccion == null)) {
+                    JOptionPane.showMessageDialog(this, "Por favor, solo ingrese números");
+                } else {
+                    error = true;
+                    break;
+                }
             }
 
         } while (true);
-        System.out.println("Ha elegido usar X" + Integer.parseInt(eleccion));
-        procedimiento += "\n\nHa elegido usar X" + Integer.parseInt(eleccion);
-        actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-        filaPivote = (Integer.parseInt(eleccion)-1);
-        columnaPivote = varSalida(igualdades, tecnicaM);
-        
-        System.out.println("Columna pivote" + columnaPivote);
-        System.out.println("Fila pivote" + filaPivote);
-        matriz = ConvertirVariableEnBase(igualdades, columnaPivote, filaPivote);
+        //System.out.println("Ha elegido usar X" + Integer.parseInt(eleccion));
+        if (!error) {//No se hace ningun procedimiento
+            System.out.println("Ha elegido usar X" + Integer.parseInt(eleccion));
+            procedimiento += "\n\nHa elegido usar X" + Integer.parseInt(eleccion);
+            actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+            filaPivote = (Integer.parseInt(eleccion) - 1);
+            columnaPivote = varSalida(igualdades, tecnicaM);
 
-        try {
-            System.out.println("\nObteniendo una nueva solución...");
-            procedimiento += "\nObteniendo una nueva solución...\n";
+            System.out.println("Columna pivote" + columnaPivote);
+            System.out.println("Fila pivote" + filaPivote);
+            matriz = ConvertirVariableEnBase(igualdades, columnaPivote, filaPivote);
+
+            try {
+                System.out.println("\nObteniendo una nueva solución...");
+                procedimiento += "\nObteniendo una nueva solución...\n";
+                actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+                mostrarMatriz(matriz);
+                actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+
+            } catch (IOException ex) {
+                System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
+                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {//Mostrar la tabla simplex en la interfaz grafica
+                TablaSimplexIteracion(matriz, tecnicaM);
+            } catch (IOException ex) {
+                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            comprobarZ(matriz, fObjetivo, tecnicaM);
             actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-            mostrarMatriz(matriz);
-            actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-            
-        } catch (IOException ex) {
-            System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
-            Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+
         }
-
-        comprobarZ(matriz, fObjetivo, tecnicaM);
-        actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-
     }
 
     //CÓDIGO PARA OBTENER TODOS LOS VALORES MEDIANTE LA INTERFAZ GRAFICA
@@ -1865,6 +2079,32 @@ public class inter extends javax.swing.JFrame {
         return array;
     }
 
+    public void calcularNuevalSolI() throws IOException {
+        System.out.println("calculando una nueva solución \na petición del usuario");
+        procedimiento += "\n\ncalculando una nueva solución \na petición del usuario\n\n";
+        int aux;
+        do {
+            aux = (int) (Math.random() * n) + 1;
+            if (aux > teta) {
+                teta = aux;
+                break;
+            }else if(aux == n){
+                System.out.println("\nEl limite albitrario preestablecido de tetha es 10,000");
+                System.out.println("Por lo tanto, no puedo calcular más soluciones.");
+                procedimiento += "\nEl limite albitrario preestablecido de tetha es 10,000\n"
+                        + "Por lo tanto, no puedo calcular más soluciones.\n";
+                actualizarProcedimiento(procedimiento);
+                solMultiple.setVisible(false);
+                solMultiple.setEnabled(false);
+                break;
+            }
+        } while (true);
+        actualizarProcedimiento(procedimiento);
+        comprobarZ(matriz, fObjetivo, tecnicaM);
+        actualizarProcedimiento(procedimiento);
+    }
+
+    ///////////////////////////////////////////////////////////////
     //Codigo para actualizar el JTextArea con el procedimiento
     public void actualizarProcedimiento(String procedimiento) {
         this.txtProcedimiento.setText(procedimiento);
