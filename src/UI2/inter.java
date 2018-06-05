@@ -522,28 +522,39 @@ public class inter extends javax.swing.JFrame {
 //                    1,
 //                    1};
 
-//                //PROBLEMA CON SOLUCIONES MÚLTIPLES
-//                double[] fObjetivo = {6, 8, 4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-//                setfObjetivo(fObjetivo);
-//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-//                    {3, 4, 2, 18},
-//                    {4, 5, 1, 20}};
-//
-//                //   Restricciones con sol multiples
-//                int[] condicion = new int[]{
-//                    0, 
-//                    0};
-                //PROBLEMA CON SOLUCIONES Ilimitadas //MAX
-                double[] fObjetivo = {4, 4, 3};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+                //PROBLEMA CON SOLUCIONES MÚLTIPLES
+                double[] fObjetivo = {6, 8, 4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
                 setfObjetivo(fObjetivo);
                 double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-                    {3, -4, 1, 2},
-                    {2, 0, 2, 12}};
+                    {3, 4, 2, 18},
+                    {4, 5, 1, 20}};
 
-                //   Restricciones con sol Ilimitadas
+                //   Restricciones con sol multiples
                 int[] condicion = new int[]{
-                    1,
-                    2};
+                    0, 
+                    0};
+//                //PROBLEMA CON SOLUCIONES Ilimitadas //MAX
+//                double[] fObjetivo = {4, 4, 3};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                setfObjetivo(fObjetivo);
+//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//                    {3, -4, 1, 2},
+//                    {2, 0, 2, 12}};
+//
+//                //   Restricciones con sol Ilimitadas
+//                int[] condicion = new int[]{
+//                    1,
+//                    2};
+//                //PROBLEMA CON Insoluble //MAX
+//                double[] fObjetivo = {3, 2};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                setfObjetivo(fObjetivo);
+//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//                    {2, 1, 2},
+//                    {3, 4, 12}};
+//
+//                //   Restricciones con sol Ilimitadas
+//                int[] condicion = new int[]{
+//                    0,
+//                    2};
 
                 //////////////////////FIN  DE ESTABLECER EL PROBLEMA//////////////////////////////
                 //////////////////////////////////////////////////////////////////////////////////
@@ -647,6 +658,8 @@ public class inter extends javax.swing.JFrame {
                             System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
                             Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                        System.out.println("Determinando si la funcion es optima...");
+                        procedimiento += "\n\nDeterminando si la funcion es optima...";
                         condicionZ = comprobarFactibilidadZ(matriz, MAXMIN, tecnicaM);
                         actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
                         iteracion++;
@@ -1388,8 +1401,8 @@ public class inter extends javax.swing.JFrame {
             System.out.println("No es óptima");
             procedimiento += "\nNo es óptima";
         } else {
-            System.out.println("Es óptima");
-            procedimiento += "\nEs óptima";
+            System.out.println("Es óptima\n");
+            procedimiento += "\nEs óptima\n";
         }
         return condicionZ;
     }
@@ -1700,6 +1713,7 @@ public class inter extends javax.swing.JFrame {
             System.out.println("El valor de tetha es: " + teta);
             System.out.println("La solución es: ");
             procedimiento += "\nLa solución es: \n";
+
             for (int x = 0; x < subIndiceVB.size(); x++) {
                 System.out.print("X" + subIndiceVB.get(x));
                 hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)] - (teta * matrix[x][filaPivote]));
@@ -1760,68 +1774,147 @@ public class inter extends javax.swing.JFrame {
 
         } else {
 
-            System.out.println("La solución es: ");
-            procedimiento += "\nLa solución es: \n";
-            for (int x = 0; x < subIndiceVB.size(); x++) {
-                System.out.print("X" + subIndiceVB.get(x));
-                hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)]);
-                System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
-                procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
-            }
-            //Obteniendo las llaves del hmap
-            List keys = new ArrayList(hmapVB.keySet());
-            //Ordenando variables básicas
-            Collections.sort(keys);//Aqui ya esta ordenadas
-
-            System.out.print("Z = ");
-            procedimiento += "\nZ = ";
-            for (int i = 0, k = 0; i < ZObj.length; i++) {
-                if (hmapVB.containsKey((i + 1))) {
-
-                    if ((k != 0)) {
-                        if (hmapVB.get((i + 1)) > 0) {
-                            System.out.print(" + ");
-                            procedimiento += " + ";
-                        }
-                    }
-
-                    System.out.print(fraccion.fraction(ZObj[i])
-                            + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")");
-
-                    Z += (ZObj[i] * hmapVB.get((i + 1)));
-                    procedimiento += fraccion.fraction(ZObj[i])
-                            + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")";
-                    k++;
-                }
-            }
-
+            //Verificar si el problema no tiene solución.
             if (tecnicaM) {
-                System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
-                procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
-            } else {
+                System.out.println("La solución es: ");
+                procedimiento += "\nLa solución es: \n";
 
-                if (matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)] == 0) {//Si no hay M
+                for (int x = 0; x < subIndiceVB.size(); x++) {
+                    System.out.print("X" + subIndiceVB.get(x));
+                    hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)]);
+                    System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
+                    procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
+                }
+                //Obteniendo las llaves del hmap
+                List keys = new ArrayList(hmapVB.keySet());
+                //Ordenando variables básicas
+                Collections.sort(keys);//Aqui ya esta ordenadas
+
+                System.out.print("Z = ");
+                procedimiento += "\nZ = ";
+                for (int i = 0, k = 0; i < ZObj.length; i++) {
+                    if (hmapVB.containsKey((i + 1))) {
+
+                        if ((k != 0)) {
+                            if (hmapVB.get((i + 1)) > 0) {
+                                System.out.print(" + ");
+                                procedimiento += " + ";
+                            }
+                        }
+
+                        System.out.print(fraccion.fraction(ZObj[i])
+                                + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")");
+
+                        Z += (ZObj[i] * hmapVB.get((i + 1)));
+                        procedimiento += fraccion.fraction(ZObj[i])
+                                + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")";
+                        k++;
+                    }
+                }
+
+                if (tecnicaM) {
                     System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
                     procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
-                } else if (matrix[matrix.length - 1][(matrix[matrix.length - 1].length - 1)] == 0) {//Si hay M
-
-                    System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
-                    procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
                 } else {
-                    //System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
+
+                    if (matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)] == 0) {//Si no hay M
+                        System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+                        procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                    } else if (matrix[matrix.length - 1][(matrix[matrix.length - 1].length - 1)] == 0) {//Si hay M
+
+                        System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
+                        procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                    } else {
+                        //System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
 //                if (Z > 0) {
 //                    System.out.print(" + " + fraccion.fraction(Z) + "\n\n");
 //                } else if (Z < 0) {
 //                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
 //                }
-                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
-                    procedimiento += " " + fraccion.fraction(Z) + "\n\n";
+                        System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+                        procedimiento += " " + fraccion.fraction(Z) + "\n\n";
 
-                }
+                    }
 
 //            System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M "+ fraccion.fraction(Z) + "\n\n");
 //            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                }
+            } else {
+                if (Math.round(matrix[(matrix.length - 2)][(matrix[0].length - 1)]) != 0.0) {
+                    System.out.println("El problema NO tiene solución:");
+                    System.out.println("Aparece variable artificial");
+                    System.out.println("\"NO HAY SOLUCIÓN FACTIBLE\"");
+                    System.out.println("");
+                    procedimiento += "\nEl problema NO tiene solución: \n"
+                            + "\nAparece variable artificial\n"
+                            + "\"NO HAY SOLUCIÓN FACTIBLE\"\n";
+                } else {
+                    System.out.println("La solución es: ");
+                    procedimiento += "\nLa solución es: \n";
+
+                    for (int x = 0; x < subIndiceVB.size(); x++) {
+                        System.out.print("X" + subIndiceVB.get(x));
+                        hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)]);
+                        System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
+                        procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
+                    }
+                    //Obteniendo las llaves del hmap
+                    List keys = new ArrayList(hmapVB.keySet());
+                    //Ordenando variables básicas
+                    Collections.sort(keys);//Aqui ya esta ordenadas
+
+                    System.out.print("Z = ");
+                    procedimiento += "\nZ = ";
+                    for (int i = 0, k = 0; i < ZObj.length; i++) {
+                        if (hmapVB.containsKey((i + 1))) {
+
+                            if ((k != 0)) {
+                                if (hmapVB.get((i + 1)) > 0) {
+                                    System.out.print(" + ");
+                                    procedimiento += " + ";
+                                }
+                            }
+
+                            System.out.print(fraccion.fraction(ZObj[i])
+                                    + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")");
+
+                            Z += (ZObj[i] * hmapVB.get((i + 1)));
+                            procedimiento += fraccion.fraction(ZObj[i])
+                                    + "(" + fraccion.fraction(hmapVB.get((i + 1))) + ")";
+                            k++;
+                        }
+                    }
+
+                    if (tecnicaM) {
+                        System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+                        procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                    } else {
+
+                        if (matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)] == 0) {//Si no hay M
+                            System.out.print(" ---> " + fraccion.fraction(Z) + "\n\n");
+                            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                        } else if (matrix[matrix.length - 1][(matrix[matrix.length - 1].length - 1)] == 0) {//Si hay M
+
+                            System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M" + "\n\n");
+                            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                        } else {
+                            //System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M");
+//                if (Z > 0) {
+//                    System.out.print(" + " + fraccion.fraction(Z) + "\n\n");
+//                } else if (Z < 0) {
+//                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+//                }
+                            System.out.print(" " + fraccion.fraction(Z) + "\n\n");
+                            procedimiento += " " + fraccion.fraction(Z) + "\n\n";
+
+                        }
+
+//            System.out.print(" ---> " + fraccion.fraction(matrix[matrix.length - 2][(matrix[matrix.length - 1].length - 1)]) + "M "+ fraccion.fraction(Z) + "\n\n");
+//            procedimiento += " --->" + fraccion.fraction(Z) + "\n\n";
+                    }
+                }
             }
+
         }
     }
 
@@ -1838,7 +1931,7 @@ public class inter extends javax.swing.JFrame {
         int[] columnasTabla = new int[matrix[0].length - 1];
 
         for (int i = 0; i < columnasTabla.length; i++) {
-            columnasTabla[i] = i;
+            columnasTabla[i] = (i+1);
             hmapNVB.put((i + 1), "X" + (i + 1));
         }
 
@@ -2088,7 +2181,7 @@ public class inter extends javax.swing.JFrame {
             if (aux > teta) {
                 teta = aux;
                 break;
-            }else if(aux == n){
+            } else if (aux == n) {
                 System.out.println("\nEl limite albitrario preestablecido de tetha es 10,000");
                 System.out.println("Por lo tanto, no puedo calcular más soluciones.");
                 procedimiento += "\nEl limite albitrario preestablecido de tetha es 10,000\n"
