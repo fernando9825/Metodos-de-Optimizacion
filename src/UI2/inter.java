@@ -50,7 +50,7 @@ public class inter extends javax.swing.JFrame {
     public static double[][] matriz;
     public static double[] fObjetivo;
     public static int[] condicion;
-    public static boolean condicionZ = false, tecnicaM = false, solIlim = false;
+    public static boolean condicionZ = false, tecnicaM = false, solIlim = false, detener = false;
     public static String procedimiento = "";
     //Nuevos campos de clase
     public static ArrayList<Integer> vHolguraIndice = new ArrayList<>();
@@ -150,6 +150,10 @@ public class inter extends javax.swing.JFrame {
         TableModel modelo2 = table2.getModel();
         this.jTableSimplex.setModel(modelo2);
         jTableSimplex.getTableHeader().setReorderingAllowed(false);
+
+        //Desactivando boton detener, porque el programa esta creando todos los objetos
+        btnDetener.setVisible(false);
+        btnDetener.setEnabled(false);
 
         this.spinnerVD.addChangeListener(new ChangeListener() {
 
@@ -313,6 +317,7 @@ public class inter extends javax.swing.JFrame {
         jTableSimplex = new javax.swing.JTable();
         jButton1 = new javax.swing.JButton();
         solMultiple = new javax.swing.JButton();
+        btnDetener = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -401,6 +406,13 @@ public class inter extends javax.swing.JFrame {
             }
         });
 
+        btnDetener.setText("DETENER");
+        btnDetener.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDetenerActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -411,7 +423,7 @@ public class inter extends javax.swing.JFrame {
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(jScrollPane2)
                         .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                 .addGroup(layout.createSequentialGroup()
                                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                         .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -420,25 +432,30 @@ public class inter extends javax.swing.JFrame {
                                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addComponent(spinnerVD, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(spinnerRES, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addComponent(btnResolver)
-                                .addComponent(cbxMAXMIN, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(cbxMAXMIN, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                        .addComponent(btnResolver)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(btnDetener))))
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jButton1, javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(8, 8, 8)
                         .addComponent(jLabel5))
                     .addComponent(solMultiple))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE))
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -464,14 +481,13 @@ public class inter extends javax.swing.JFrame {
                                     .addComponent(spinnerRES)
                                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE))))
                         .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(cbxMAXMIN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnResolver))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(1, 1, 1)
-                                .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cbxMAXMIN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButton1, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnResolver)
+                            .addComponent(btnDetener))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(solMultiple)))
                 .addGap(18, 18, 18)
@@ -492,6 +508,11 @@ public class inter extends javax.swing.JFrame {
 
         //Desactivando botón para que no ejecute otro hilo.
         btnResolver.setEnabled(false);
+
+        //Activando boton detener, esperando acción del usuario
+        btnDetener.setVisible(true);
+        btnDetener.setEnabled(true);
+
         //Estableciendo variables en su valor inicial;
         condicionZ = false;
         tecnicaM = false;
@@ -510,17 +531,17 @@ public class inter extends javax.swing.JFrame {
                  */
 
                 //  MAXMIN = 1; //MAX
-                MAXMIN = 2; //MIN
-                //PROBLEMA CON EMPATE EN VAR DE SALIDA (DEGENERACIÓN)
-                double[] fObjetivo = {-3, -3, -5, -4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-                setfObjetivo(fObjetivo);
-                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-                    {4, 2, 4, -1, 2},
-                    {6, 1, 6, -1, 3}};
-
-                int[] condicion = new int[]{
-                    0,
-                    0};
+//                MAXMIN = 2; //MIN
+//                //PROBLEMA CON EMPATE EN VAR DE SALIDA (DEGENERACIÓN)
+//                double[] fObjetivo = {-3, -3, -5, -4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                setfObjetivo(fObjetivo);
+//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//                    {4, 2, 4, -1, 2},
+//                    {6, 1, 6, -1, 3}};
+//
+//                int[] condicion = new int[]{
+//                    0,
+//                    0};
 //                double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn//MAX
 //                setfObjetivo(fObjetivo);
 //                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
@@ -584,9 +605,9 @@ public class inter extends javax.swing.JFrame {
                 //Traer todos los valores desde la interfaz grafica.
                 procedimiento = "";
                 //Ejecutar algoritmo SIMPLEX
-                //antePaso();
+                antePaso();
                 tecnicaM = verificarCondiciones(condicion);//Si es false, todas son <=, sino, hay que usar la Tecnica M
-                matriz = paso1(/*antePaso()*/array, fObjetivo, condicion, MAXMIN, tecnicaM);
+                matriz = paso1(antePaso()/*array*/, fObjetivo, condicion, MAXMIN, tecnicaM);
 
                 prepararTabla(matriz);//Preparar las columnas de la JTable
 
@@ -635,6 +656,10 @@ public class inter extends javax.swing.JFrame {
 
                 int iteracion = 1;
                 while (condicionZ) {
+                    if (detener) {
+                        //Si se presiona el boton de detener, se para el método simplex
+                        break;
+                    }
                     System.out.println("Iteración: " + iteracion);
                     procedimiento += "\nIteración: " + iteracion;
                     actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
@@ -696,26 +721,37 @@ public class inter extends javax.swing.JFrame {
 
                 }
 
-                try {
-                    comprobarZ(matriz, fObjetivo, tecnicaM);
-                    actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
-                } catch (IOException ex) {
-                    System.out.println("Ocurrio un error en el paso final, comprobando Z:\n" + ex);
-                    Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                if (detener) {
+                    System.out.println("Ha decidido detener el algoritmo");
+                    procedimiento += "\n\n¡¡¡HA DECIDIDO DETENER EL ALGORTIMO\n\n";
+                    actualizarProcedimiento(procedimiento);
+                    detener = false;
+                } else {
+                    try {
+                        comprobarZ(matriz, fObjetivo, tecnicaM);
+                        actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
+                    } catch (IOException ex) {
+                        System.out.println("Ocurrio un error en el paso final, comprobando Z:\n" + ex);
+                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
-                //Aqui se verifica si el problema tiene soluciones múltiples
-                //Este método da pie a comprobar las soluciones multiples...
-                //Buscando variables no basicas
-                System.out.println("VARIABLES NO BÁSICAS");
-                try {
-                    System.out.println(determinarVarNOBasicas(matriz, tecnicaM));
-                } catch (IOException ex) {
-                    Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                    //Aqui se verifica si el problema tiene soluciones múltiples
+                    //Este método da pie a comprobar las soluciones multiples...
+                    //Buscando variables no basicas
+                    System.out.println("VARIABLES NO BÁSICAS");
+                    try {
+                        System.out.println(determinarVarNOBasicas(matriz, tecnicaM));
+                    } catch (IOException ex) {
+                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
-                //Reactivando botón para que pueda calcular una nueva solución.
-                btnResolver.setEnabled(true);
+                    //Reactivando botón para que pueda calcular una nueva solución.
+                    btnResolver.setEnabled(true);
+
+                    //Desactivando boton detener, porque la acción ya se ejecuto
+                    btnDetener.setVisible(false);
+                    btnDetener.setEnabled(false);
+                }
             }
 
         });
@@ -765,6 +801,18 @@ public class inter extends javax.swing.JFrame {
         });
         t1.start();
     }//GEN-LAST:event_solMultipleActionPerformed
+
+    private void btnDetenerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetenerActionPerformed
+        //Presionar este botón detiene la ejecución del programa
+        detener = true;
+
+        //Reactivando botón de resolver
+        btnResolver.setEnabled(true);
+
+        //Desactivando boton detener, porque la acción ya se ejecuto
+        btnDetener.setVisible(false);
+        btnDetener.setEnabled(false);
+    }//GEN-LAST:event_btnDetenerActionPerformed
 
     /**
      * @param args the command line arguments
@@ -2628,6 +2676,7 @@ public class inter extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnDetener;
     private javax.swing.JButton btnResolver;
     public javax.swing.JComboBox<String> cbxMAXMIN;
     private javax.swing.JButton jButton1;
