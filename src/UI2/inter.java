@@ -489,9 +489,13 @@ public class inter extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnResolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResolverActionPerformed
+
+        //Desactivando botón para que no ejecute otro hilo.
+        btnResolver.setEnabled(false);
         //Estableciendo variables en su valor inicial;
         condicionZ = false;
         tecnicaM = false;
+        solIlim = false;
         vHolguraIndice.removeAll(vHolguraIndice);
         vArtificialIndice.removeAll(vArtificialIndice);
         vArtificialFilas.removeAll(vArtificialFilas);
@@ -505,9 +509,19 @@ public class inter extends javax.swing.JFrame {
                 
                  */
 
-                MAXMIN = 1; //MAX
-//                MAXMIN = 2; //MIN
-//                double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+                //  MAXMIN = 1; //MAX
+                MAXMIN = 2; //MIN
+                //PROBLEMA CON EMPATE EN VAR DE SALIDA (DEGENERACIÓN)
+                double[] fObjetivo = {-3, -3, -5, -4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+                setfObjetivo(fObjetivo);
+                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+                    {4, 2, 4, -1, 2},
+                    {6, 1, 6, -1, 3}};
+
+                int[] condicion = new int[]{
+                    0,
+                    0};
+//                double[] fObjetivo = {4, 6, 7, 5, 9};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn//MAX
 //                setfObjetivo(fObjetivo);
 //                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
 //                    {1, 3, 4, 5, 7, 20},
@@ -517,22 +531,21 @@ public class inter extends javax.swing.JFrame {
 //
 //                //        Problema de amaya
 //                int[] condicion = new int[]{
-//                    1,
-//                    1,
-//                    1,
-//                    1};
-
-                //PROBLEMA CON SOLUCIONES MÚLTIPLES
-                double[] fObjetivo = {6, 8, 4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
-                setfObjetivo(fObjetivo);
-                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
-                    {3, 4, 2, 18},
-                    {4, 5, 1, 20}};
-
-                //   Restricciones con sol multiples
-                int[] condicion = new int[]{
-                    0, 
-                    0};
+//                    2,
+//                    2,
+//                    2,
+//                    0};
+//                //PROBLEMA CON SOLUCIONES MÚLTIPLES
+//                double[] fObjetivo = {6, 8, 4};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                setfObjetivo(fObjetivo);
+//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//                    {3, 4, 2, 18},
+//                    {4, 5, 1, 20}};
+//
+//                //   Restricciones con sol multiples
+//                int[] condicion = new int[]{
+//                    0, 
+//                    0};
 //                //PROBLEMA CON SOLUCIONES Ilimitadas //MAX
 //                double[] fObjetivo = {4, 4, 3};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
 //                setfObjetivo(fObjetivo);
@@ -555,7 +568,17 @@ public class inter extends javax.swing.JFrame {
 //                int[] condicion = new int[]{
 //                    0,
 //                    2};
-
+////PROBLEMA CON SOLUCIONES Ilimitadas //MIN
+//                double[] fObjetivo = {-4, -4, 3};//Función objetivo, Z = C1X1 + C2X2 + ... + CnXn
+//                setfObjetivo(fObjetivo);
+//                double[][] array = new double[][]{ //Restricciones, para este caso, todas <=
+//                    {3, -4, 1, 2},
+//                    {2, 0, 2, 12}};
+//
+//                //   Restricciones con sol Ilimitadas
+//                int[] condicion = new int[]{
+//                    0,
+//                    1};
                 //////////////////////FIN  DE ESTABLECER EL PROBLEMA//////////////////////////////
                 //////////////////////////////////////////////////////////////////////////////////
                 //Traer todos los valores desde la interfaz grafica.
@@ -690,6 +713,9 @@ public class inter extends javax.swing.JFrame {
                 } catch (IOException ex) {
                     Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
                 }
+
+                //Reactivando botón para que pueda calcular una nueva solución.
+                btnResolver.setEnabled(true);
             }
 
         });
@@ -1517,6 +1543,7 @@ public class inter extends javax.swing.JFrame {
 
     public static int varSalida(double[][] igualdades, boolean tecnicaM) throws IOException {
         double[] divisionMenor = new double[igualdades.length];
+        double[] divisionMenorEmpate = new double[(igualdades[0].length - 1)];
         ArrayList<Integer> varSalidaPosJ = new ArrayList<>();
         //ArrayList para determinar las soluciones ilimitadas
         ArrayList<Double> solIlimitadas = new ArrayList<>();
@@ -1535,11 +1562,12 @@ public class inter extends javax.swing.JFrame {
                 divisionMenorValor.add(Double.POSITIVE_INFINITY);
                 solIlimitadas.add(Double.POSITIVE_INFINITY);//Esta variable permite identificar las soluciones ilimitadas
                 System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + ")/(" + igualdades[i][(filaPivote)]
                         + ") = " + "Infinity");
                 procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
+                        + ")/(" + igualdades[i][(filaPivote)]
                         + ") = " + "Infinity";
+
             } else {
                 divisionMenor[i] = igualdades[i][(igualdades[0].length - 1)] / igualdades[i][(filaPivote)];
 
@@ -1547,13 +1575,21 @@ public class inter extends javax.swing.JFrame {
                     //Validando que no se puedan tomar valores negativos
                     divisionMenor[i] = Double.POSITIVE_INFINITY;
                     //solIlimitadas.add(Double.POSITIVE_INFINITY);//Esta variable permite identificar las soluciones ilimitadas
+                    System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                            + ")/(" + igualdades[i][(filaPivote)]
+                            + ") = " + divisionMenor[i]);
+                    procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                            + ")/(" + igualdades[i][(filaPivote)]
+                            + ") = " + fraccion.fraction((igualdades[i][(igualdades[0].length - 1)]) / igualdades[i][(filaPivote)]);
+                } else {
+                    System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                            + ")/(" + igualdades[i][(filaPivote)]
+                            + ") = " + divisionMenor[i]);
+                    procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                            + ")/(" + igualdades[i][(filaPivote)]
+                            + ") = " + divisionMenor[i];
                 }
-                System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
-                        + ") = " + divisionMenor[i]);
-                procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
-                        + ")/(" + fraccion.fraction(igualdades[i][(filaPivote)])
-                        + ") = " + divisionMenor[i];
+
                 divisionMenorValor.add(divisionMenor[i]);
                 solIlimitadas.add(divisionMenor[i]);//Esta variable permite identificar las soluciones ilimitadas
             }
@@ -1590,22 +1626,206 @@ public class inter extends javax.swing.JFrame {
 //            if(solIlimitadas.get(i) < 0){
 //                x++;
 //            }
-            System.out.println("sol I" + solIlimitadas.get(i));
+            //System.out.println("sol I" + solIlimitadas.get(i));
         }
-        System.out.println("Tamaño de solIlimitadas: " + solIlimitadas.size());
+        //System.out.println("Tamaño de solIlimitadas: " + solIlimitadas.size());
         if (x == (solIlimitadas.size())) {
             solIlim = true;
         }
 
+        System.out.println("Tamaño de varSalidaPosJ: " + varSalidaPosJ.size());
+        System.out.println(varSalidaPosJ);
+
         if (solIlim) {
             System.out.println("Estamos en el caso de las soluciones ilimitadas");
-            System.out.println("No se puede determinar variable de entrada");
+            System.out.println("No se puede determinar variable de salida");
             procedimiento += "\n\nEstamos en el caso de las soluciones ilimitadas"
-                    + "\nNo se puede determinar variable de entrada";
+                    + "\nNo se puede determinar variable de salida";
 
         } else {
-            System.out.println("La variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1));
-            procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
+
+            if (varSalidaPosJ.size() > 1) {
+                System.out.println("Entre a verificar");
+                ArrayList<Double> auxEmpate = new ArrayList<>();
+                for (int k = 0; k < divisionMenor.length; k++) {
+
+                    if (divisionMenor[k] == divisionMenorValor.stream().mapToDouble(i -> i).min().getAsDouble()) {
+                        //determinar cual es valor finito positivo menor.
+
+                        auxEmpate.add(divisionMenor[k]);//Solo se guarda la fila pivote en esta variable
+                        System.out.println(auxEmpate.get(k));
+
+                    }
+                }
+                int contadorRepetidos = 0;
+                for (double a : auxEmpate) {
+                    if (a != Double.POSITIVE_INFINITY) {
+                        contadorRepetidos++;
+                    }
+                }
+                if (contadorRepetidos != 0) {
+                    System.out.println("¡¡¡TENEMOS UN EMPATE DE VARIABLES!!!");
+                    System.out.println("Aplicando algoritmo de desempate");
+                    procedimiento += "\n\n¡¡¡TENEMOS UN EMPATE DE VARIABLES!!!\n"
+                            + "Aplicando algoritmo de desempate\n";
+
+                    //Aplicar algoritmo para determinar variable de salida
+                    //Primero hay que determinar las variables básicas
+                    /*
+                        DEBO CONTINUAR PROGRAMANDO AQUÍ, YA TENGO SUEÑO :´V
+                     */
+                    //Restableciendo arrayList´s para determinar la nueva variable de salida
+                    divisionMenorValor.removeAll(divisionMenorValor);
+                    varSalidaPosJ.removeAll(varSalidaPosJ);
+                    System.out.println("Estas son las variables basicas, para empate");
+                    System.out.println(Vbasicas);
+
+                    ArrayList<Double> menor = new ArrayList<>();
+                    for (int j = 0; j < divisionMenorEmpate.length; j++) {
+
+                        for (int i = 0; i < igualdades.length - posConM /*-1 para no considerar a Z*/; i++) {
+
+                            if (j != filaPivote) {
+                                if (j > filaPivote) {
+                                    if (igualdades[i][filaPivote] <= 0) {
+                                        //Es negativo y no se considera
+                                        menor.add(Double.POSITIVE_INFINITY);
+                                    } else {
+                                        //Si el numerador es cero, tampoco se considera
+                                        if (igualdades[i][(j + 1)] == 0) {
+                                            menor.add(Double.POSITIVE_INFINITY);
+                                        } else {
+                                            //Es un resultado válido.
+                                            menor.add((igualdades[i][(j + 1)] / igualdades[i][filaPivote]));
+                                        }
+                                    }
+
+                                } else {
+                                    if (igualdades[i][filaPivote] <= 0) {
+                                        //Es negativo y no se considera
+                                        menor.add(Double.POSITIVE_INFINITY);
+                                    } else {
+                                        if (igualdades[i][(j)] == 0) {
+                                            menor.add(Double.POSITIVE_INFINITY);
+                                        } else {
+                                            //Es un resultado válido.
+                                            menor.add((igualdades[i][j] / igualdades[i][filaPivote]));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        for (int a = 0; a < menor.size(); a++) {
+                            //COMPROBANDO VALOR INTERNAMENTE
+                            if (j != filaPivote) {
+                                if (j > filaPivote) {
+                                    System.out.println((j + 1) + " : " + "(" + fraccion.fraction(igualdades[a][(j + 1)])
+                                            + ")/(" + igualdades[a][filaPivote] + ") = " + menor.get(a));
+                                    procedimiento += (j + 1) + " : " + "(" + fraccion.fraction(igualdades[a][(j + 1)])
+                                            + ")/(" + igualdades[a][filaPivote] + ") = " + menor.get(a) + "\n";
+                                } else {
+                                    System.out.println((j + 1) + " : " + "(" + fraccion.fraction(igualdades[a][j])
+                                            + ")/(" + igualdades[a][filaPivote] + ") = " + menor.get(a));
+                                    procedimiento += (j + 1) + " : " + "(" + fraccion.fraction(igualdades[a][j])
+                                            + ")/(" + igualdades[a][filaPivote] + ") = " + menor.get(a) + "\n";
+                                }
+                            }
+
+                        }
+
+                        //Evaluando variables para determinar desempate
+                        for (int a = 0; a < menor.size(); a++) {
+                            //COMPROBANDO VALOR INTERNAMENTE
+                            if (menor.get(a) == menor.stream().mapToDouble(r -> r).min().getAsDouble()) {
+                                varSalidaPosJ.add(a);
+                            }
+
+                        }
+
+                        System.out.println("Las var sallll" + varSalidaPosJ);
+                        if (varSalidaPosJ.size() > 1) {
+                            //AÚN EXISTE UN EMPATE, HAY QUE SEGUIR EVALUANDO
+                            System.out.println("He salido, se ha determinado la variable de salida");
+                            varSalidaPosJ.removeAll(varSalidaPosJ);
+                            menor.removeAll(menor);
+                        } else {
+                            //SE HE DETERMINADO LA VARIABLE DE SALIDA, SALIENDO DEL BUCLE
+                            break;
+                        }
+                    }
+                    System.out.println("menor" + menor);
+
+                }
+
+                System.out.println("El algoritmo de desempate ha finalizado...");
+                procedimiento += "\nEl algoritmo de desempate ha finalizado...\n";
+                if (varSalidaPosJ.isEmpty()) {
+                    //NO SE DETERMINO VARIABLE DE SALIDA, TOMANDO CUALQUIERA
+                    System.out.println("No se pudo determinar variable de salida, tomando cualquiera");
+                    procedimiento += "\nNo se pudo determinar variable de salida, tomando cualquiera\n";
+                    //RESTABLECIENDO VARIABLES A SU VALOR ORIGINAL
+                    divisionMenorValor.removeAll(divisionMenorValor);
+                    solIlimitadas.removeAll(solIlimitadas);
+                    for (int i = 0; i < igualdades.length - posConM /*-1 para no considerar a Z*/; i++) {
+
+                        if (igualdades[i][(filaPivote)] == 0) {
+                            //Si el denominador es cero, devolver infinito
+                            divisionMenorValor.add(Double.POSITIVE_INFINITY);
+                            solIlimitadas.add(Double.POSITIVE_INFINITY);//Esta variable permite identificar las soluciones ilimitadas
+                            System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                                    + ")/(" + igualdades[i][(filaPivote)]
+                                    + ") = " + "Infinity");
+                            procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                                    + ")/(" + igualdades[i][(filaPivote)]
+                                    + ") = " + "Infinity";
+
+                        } else {
+                            divisionMenor[i] = igualdades[i][(igualdades[0].length - 1)] / igualdades[i][(filaPivote)];
+
+                            if (divisionMenor[i] <= 0) {
+                                //Validando que no se puedan tomar valores negativos
+                                divisionMenor[i] = Double.POSITIVE_INFINITY;
+                                //solIlimitadas.add(Double.POSITIVE_INFINITY);//Esta variable permite identificar las soluciones ilimitadas
+                                System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                                        + ")/(" + igualdades[i][(filaPivote)]
+                                        + ") = " + divisionMenor[i]);
+                                procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                                        + ")/(" + igualdades[i][(filaPivote)]
+                                        + ") = " + fraccion.fraction((igualdades[i][(igualdades[0].length - 1)]) / igualdades[i][(filaPivote)]);
+                            } else {
+                                System.out.println((i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                                        + ")/(" + igualdades[i][(filaPivote)]
+                                        + ") = " + divisionMenor[i]);
+                                procedimiento += "\n" + (i + 1) + " : " + "(" + fraccion.fraction(igualdades[i][(igualdades[0].length - 1)])
+                                        + ")/(" + igualdades[i][(filaPivote)]
+                                        + ") = " + divisionMenor[i];
+                            }
+
+                            divisionMenorValor.add(divisionMenor[i]);
+                            solIlimitadas.add(divisionMenor[i]);//Esta variable permite identificar las soluciones ilimitadas
+                        }
+
+                    }
+
+                    for (int k = 0; k < divisionMenor.length; k++) {
+
+                        if (divisionMenor[k] == divisionMenorValor.stream().mapToDouble(i -> i).min().getAsDouble()) {
+                            //determinar cual es valor finito positivo menor.
+                            varSalidaPosJ.add(k);//Solo se guarda la fila pivote en esta variable
+                        }
+                    }
+                    System.out.println("La variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1));
+                    procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
+                } else {
+                    System.out.println("La variable de salida (Xs) es: " + "X" + (Vbasicas.get(0) + 1));
+                    procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (Vbasicas.get(0) + 1);
+                }
+            } else {
+                //NO EXISTE EMPATE, SE PUEE DEVOLVER LA VARIABLE DE SALIDA
+                System.out.println("La variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1));
+                procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
+            }
         }
 
         return varSalidaPosJ.get(0);
@@ -1716,7 +1936,7 @@ public class inter extends javax.swing.JFrame {
 
             for (int x = 0; x < subIndiceVB.size(); x++) {
                 System.out.print("X" + subIndiceVB.get(x));
-                hmapVB.put(subIndiceVB.get(x), matrix[x][(matrix[x].length - 1)] - (teta * matrix[x][filaPivote]));
+                hmapVB.put(subIndiceVB.get(x), (matrix[x][(matrix[x].length - 1)] - (teta * matrix[x][filaPivote])));
                 System.out.println(" = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))));
                 procedimiento += "X" + subIndiceVB.get(x) + " = " + fraccion.fraction(hmapVB.get(subIndiceVB.get(x))) + "\n";
             }
@@ -1739,9 +1959,9 @@ public class inter extends javax.swing.JFrame {
             //DEBO REVISAR ESTO
             if (MAXMIN == 1) {
                 //Maximizar
-                Z -= (matrix[(matrix.length - 1)][filaPivote] * teta);
+                Z = Z + (Math.abs(matrix[(matrix.length - 1)][filaPivote]) * teta);
             } else {
-                Z += (matrix[(matrix.length - 1)][filaPivote] * teta);
+                Z = Z - (Math.abs(matrix[(matrix.length - 1)][filaPivote]) * teta);
             }
 
             if (tecnicaM) {
@@ -1763,8 +1983,8 @@ public class inter extends javax.swing.JFrame {
 //                } else if (Z < 0) {
 //                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
 //                }
-                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
-                    procedimiento += " " + fraccion.fraction(Z) + "\n\n";
+                    System.out.print("---> " + fraccion.fraction(Z) + "\n\n");
+                    procedimiento += "---> " + fraccion.fraction(Z) + "\n\n";
 
                 }
 
@@ -1848,6 +2068,8 @@ public class inter extends javax.swing.JFrame {
                     procedimiento += "\nEl problema NO tiene solución: \n"
                             + "\nAparece variable artificial\n"
                             + "\"NO HAY SOLUCIÓN FACTIBLE\"\n";
+                    solMultiple.setVisible(false);
+                    solMultiple.setEnabled(false);
                 } else {
                     System.out.println("La solución es: ");
                     procedimiento += "\nLa solución es: \n";
@@ -1904,8 +2126,8 @@ public class inter extends javax.swing.JFrame {
 //                } else if (Z < 0) {
 //                    System.out.print(" " + fraccion.fraction(Z) + "\n\n");
 //                }
-                            System.out.print(" " + fraccion.fraction(Z) + "\n\n");
-                            procedimiento += " " + fraccion.fraction(Z) + "\n\n";
+                            System.out.print("---> " + fraccion.fraction(Z) + "\n\n");
+                            procedimiento += "---> " + fraccion.fraction(Z) + "\n\n";
 
                         }
 
@@ -1931,7 +2153,7 @@ public class inter extends javax.swing.JFrame {
         int[] columnasTabla = new int[matrix[0].length - 1];
 
         for (int i = 0; i < columnasTabla.length; i++) {
-            columnasTabla[i] = (i+1);
+            columnasTabla[i] = (i + 1);
             hmapNVB.put((i + 1), "X" + (i + 1));
         }
 
@@ -2285,6 +2507,8 @@ public class inter extends javax.swing.JFrame {
                     //AQUI HEMOS TERMINADO DE AÑADIR LA M, AHORA EL TERMINO INDEPENDIENTE
                     if (matrix[(matrix.length - 1)][x] > 0) {
                         vectorMZ[x] += " + " + fraccion.fraction(matrix[(matrix.length - 1)][x]);
+                    } else if (matrix[(matrix.length - 1)][x] < 0) {
+                        vectorMZ[x] += " " + fraccion.fraction(matrix[(matrix.length - 1)][x]);
                     }
                 } else {
                     vectorMZ[x] = fraccion.fraction(matrix[(matrix.length - 1)][x]);
@@ -2332,8 +2556,8 @@ public class inter extends javax.swing.JFrame {
 
         }
 
-        resizeColumnWidth(this.jTableSimplex);//se encarga de ajustar las columnas al contenido 
-        scrollToVisible(this.jTableSimplex, this.jTableSimplex.getModel().getRowCount() - 1, 0);//Se encarga de desplazar el JTable al final
+        ajustarAnchoColumna(this.jTableSimplex);//se encarga de ajustar las columnas al contenido 
+        mover_a_FilaJtable(this.jTableSimplex, this.jTableSimplex.getModel().getRowCount() - 1, 0);//Se encarga de desplazar el JTable al final
 
     }
 
@@ -2377,29 +2601,28 @@ public class inter extends javax.swing.JFrame {
 
     }
 
-    //STACKOVERFLOW
-    public void resizeColumnWidth(JTable table) {
+    public void ajustarAnchoColumna(JTable table) {
         final TableColumnModel columnModel = table.getColumnModel();
         for (int column = 0; column < table.getColumnCount(); column++) {
-            int width = 30; // Min width
+            int ancho = 30; //Ancho míonimo
             for (int row = 0; row < table.getRowCount(); row++) {
                 TableCellRenderer renderer = table.getCellRenderer(row, column);
                 Component comp = table.prepareRenderer(renderer, row, column);
-                width = Math.max(comp.getPreferredSize().width + 1, width);
+                ancho = Math.max(comp.getPreferredSize().width + 1, ancho);
             }
-            if (width > 300) {
-                width = 300;
+            if (ancho > 300) {
+                ancho = 300;
             }
-            columnModel.getColumn(column).setPreferredWidth(width);
+            columnModel.getColumn(column).setPreferredWidth(ancho);
         }
 
     }
 
-    public void scrollToVisible(final JTable table, final int rowIndex, final int vColIndex) {
+    public void mover_a_FilaJtable(final JTable table, final int indiceFilaa, final int indiceColumna) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                table.scrollRectToVisible(table.getCellRect(rowIndex, vColIndex, false));
+                table.scrollRectToVisible(table.getCellRect(indiceFilaa, indiceColumna, false));
             }
         });
     }

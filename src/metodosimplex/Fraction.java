@@ -40,7 +40,7 @@ public class Fraction {
 
         if (Double.toString(decimalDouble).contains("E") || Double.toString(decimalDouble).contains("e")) {
             
-            if (decimalDouble < Math.pow(1, -15)) {
+            if (decimalDouble < Math.pow(1, -20)) {
                 response = Double.toString(Math.round(decimalDouble));
             } else {
                 response = Double.toString(decimalDouble);
