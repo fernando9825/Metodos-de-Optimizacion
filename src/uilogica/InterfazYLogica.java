@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package UI2;
+package uilogica;
 
+import java.awt.Color;
+import metodosimplex.LlenarTabla;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -25,6 +27,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -39,13 +42,13 @@ import metodosimplex.Fraction;
  *
  * @author striker
  */
-public class inter extends javax.swing.JFrame {
+public class InterfazYLogica extends javax.swing.JFrame {
 
     /**
-     * Creates new form inter
+     * Creates new form InterfazYLogica
      */
     //Campos de clase
-    public static Fraction fraccion = new Fraction(true);//Instancia de la clase Fraction para convertir decimales a quebrados
+    public static Fraction fraccion;
     public static int columnaPivote, filaPivote, MAXMIN;
     public static double[][] matriz;
     public static double[] fObjetivo;
@@ -86,8 +89,10 @@ public class inter extends javax.swing.JFrame {
     //Necesario para la tabla Simplex
     DefaultTableModel tableModel = new DefaultTableModel();
 
-    public inter() {
+    public InterfazYLogica() throws IOException {
         initComponents();
+        setIcon();
+        fraccion = new Fraction(true);//Instancia de la clase Fraction para convertir decimales a quebrados
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);//a pantalla completa
         this.setTitle("Método SIMPLEX - Fernando Alvarado - UES-FMO");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -638,13 +643,13 @@ public class inter extends javax.swing.JFrame {
                     actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
                 } catch (IOException ex) {
                     System.out.println("Ocurrio un error en el paso 3:\n" + ex);
-                    Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
                 try {//Mostrar la tabla simplex en la interfaz grafica
                     TablaSimplexIteracion(matriz, tecnicaM);
                 } catch (IOException ex) {
-                    Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
                 //Paso4 -->Determinar si la funcion es optima
@@ -670,7 +675,7 @@ public class inter extends javax.swing.JFrame {
                         actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
                     } catch (IOException ex) {
                         System.out.println("Ocurrio un error en el paso 5:\n" + ex);
-                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                     try {
@@ -679,7 +684,7 @@ public class inter extends javax.swing.JFrame {
                         actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
                     } catch (IOException ex) {
                         System.out.println("Ocurrio un error en el paso 6:\n" + ex);
-                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                     if (!solIlim) {
@@ -700,11 +705,11 @@ public class inter extends javax.swing.JFrame {
                             try {//Mostrar la tabla simplex en la interfaz grafica
                                 TablaSimplexIteracion(matriz, tecnicaM);
                             } catch (IOException ex) {
-                                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                                Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         } catch (IOException ex) {
                             System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
-                            Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                         }
                         System.out.println("Determinando si la funcion es optima...");
                         procedimiento += "\n\nDeterminando si la funcion es optima...";
@@ -732,7 +737,7 @@ public class inter extends javax.swing.JFrame {
                         actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
                     } catch (IOException ex) {
                         System.out.println("Ocurrio un error en el paso final, comprobando Z:\n" + ex);
-                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                     //Aqui se verifica si el problema tiene soluciones múltiples
@@ -742,7 +747,7 @@ public class inter extends javax.swing.JFrame {
                     try {
                         System.out.println(determinarVarNOBasicas(matriz, tecnicaM));
                     } catch (IOException ex) {
-                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                     //Reactivando botón para que pueda calcular una nueva solución.
@@ -785,7 +790,7 @@ public class inter extends javax.swing.JFrame {
                         //Si tenemos soluciones ilimitadas
                         calcularNuevalSolI();
                     } catch (IOException ex) {
-                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 } else {
                     //Si tenemos múltiples soluciones
@@ -793,7 +798,7 @@ public class inter extends javax.swing.JFrame {
                         solucionesMultiples(matriz, MAXMIN, tecnicaM);
                         actualizarProcedimiento(procedimiento);
                     } catch (IOException ex) {
-                        Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
 
@@ -831,20 +836,59 @@ public class inter extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(inter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(InterfazYLogica.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(inter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(InterfazYLogica.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(inter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(InterfazYLogica.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(inter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(InterfazYLogica.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new inter().setVisible(true);
+
+                
+                UIManager.put("control", new Color(128, 128, 128));
+                UIManager.put("info", new Color(128, 128, 128));
+                UIManager.put("nimbusBase", new Color(18, 30, 49));
+                UIManager.put("nimbusAlertYellow", new Color(248, 187, 0));
+                UIManager.put("nimbusDisabledText", new Color(128, 128, 128));
+                UIManager.put("nimbusFocus", new Color(115, 164, 209));
+                UIManager.put("nimbusGreen", new Color(176, 179, 50));
+                UIManager.put("nimbusInfoBlue", new Color(66, 139, 221));
+                UIManager.put("nimbusLightBackground", new Color(18, 30, 49));
+                UIManager.put("nimbusOrange", new Color(191, 98, 4));
+                UIManager.put("nimbusRed", new Color(169, 46, 34));
+                UIManager.put("nimbusSelectedText", new Color(255, 255, 255));
+                UIManager.put("nimbusSelectionBackground", new Color(104, 93, 156));
+                UIManager.put("text", new Color(230, 230, 230));
+                try {
+                    for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                        if ("Nimbus".equals(info.getName())) {
+                            javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                            break;
+                        }
+                    }
+                } catch (ClassNotFoundException e) {
+                    //e.printStackTrace();
+                } catch (InstantiationException e) {
+                    //e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    //e.printStackTrace();
+                } catch (javax.swing.UnsupportedLookAndFeelException e) {
+                    //e.printStackTrace();
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                }
+                try {
+                    new InterfazYLogica().setVisible(true);
+                } catch (IOException ex) {
+                    Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
@@ -2338,12 +2382,12 @@ public class inter extends javax.swing.JFrame {
 
             } catch (IOException ex) {
                 System.out.println("Ocurrio un error en el paso 2, mostrar Matriz:\n" + ex);
-                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
             }
             try {//Mostrar la tabla simplex en la interfaz grafica
                 TablaSimplexIteracion(matriz, tecnicaM);
             } catch (IOException ex) {
-                Logger.getLogger(inter.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(InterfazYLogica.class.getName()).log(Level.SEVERE, null, ex);
             }
             comprobarZ(matriz, fObjetivo, tecnicaM);
             actualizarProcedimiento(procedimiento);//Esta instrucción actualiza el procedimiento en la interfaz
@@ -2698,4 +2742,8 @@ public class inter extends javax.swing.JFrame {
     public javax.swing.JSpinner spinnerVD;
     public static javax.swing.JTextArea txtProcedimiento;
     // End of variables declaration//GEN-END:variables
+
+    private void setIcon() {
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("icono.jpeg")));
+    }
 }

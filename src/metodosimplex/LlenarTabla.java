@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package UI2;
+package metodosimplex;
 
 import javax.swing.table.DefaultTableModel;
 

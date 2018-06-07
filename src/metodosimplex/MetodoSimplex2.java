@@ -5,7 +5,7 @@
  */
 package metodosimplex;
 
-import UI2.inter;
+import uilogica.InterfazYLogica;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,7 @@ import java.util.List;
 public class MetodoSimplex2 {
 
     //Campos de clase
-    public static Fraction fraccion = new Fraction(true);//Instancia de la clase Fraction para convertir decimales a quebrados
+    public static Fraction fraccion;
     public static int columnaPivote, filaPivote, MAXMIN;
     public static double[][] matriz;
     public static double[] fObjetivo;
@@ -36,7 +36,8 @@ public class MetodoSimplex2 {
 
     public static void main(String[] args) throws IOException {
 
-        new inter().setVisible(true);
+        new InterfazYLogica().setVisible(true);
+        fraccion = new Fraction(true);//Instancia de la clase Fraction para convertir decimales a quebrados
 //        MAXMIN = 1; //MAX
 //        //MAXMIN = 2; //MIN
 //        //Restricciones
