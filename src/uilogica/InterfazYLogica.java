@@ -1910,8 +1910,8 @@ public class InterfazYLogica extends javax.swing.JFrame {
                     System.out.println("La variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1));
                     procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (varSalidaPosJ.get(0) + 1);
                 } else {
-                    System.out.println("La variable de salida (Xs) es: " + "X" + (Vbasicas.get(0) + 1));
-                    procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (Vbasicas.get(0) + 1);
+                    System.out.println("La variable de salida (Xs) es: " + "X" + (Vbasicas.get(0)));
+                    procedimiento += "\nLa variable de salida (Xs) es: " + "X" + (Vbasicas.get(0));
                 }
             } else {
                 //NO EXISTE EMPATE, SE PUEE DEVOLVER LA VARIABLE DE SALIDA
@@ -2272,9 +2272,9 @@ public class InterfazYLogica extends javax.swing.JFrame {
             } else {
                 //if ((Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)]) == 0.0) && ((matrix[(matrix.length - 1)][(int) keys.get(i)]) == 0.0)) {
                 System.out.println("USANDO la M, sol Multiple");
-                System.out.println("M: " + (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)])));
-                System.out.println("I: " + (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)])));
-                valor = (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)])) + (matrix[(matrix.length - 1)][(int) keys.get(i)]);
+                System.out.println("M: " + (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)-1])));
+                System.out.println("I: " + (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)-1])));
+                valor = (Math.round(matrix[(matrix.length - 2)][(int) keys.get(i)-1])) + (matrix[(matrix.length - 1)][(int) keys.get(i)-1]);
                 //}
             }
             hmapNVBDouble.put((int) keys.get(i), valor);
