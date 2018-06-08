@@ -2283,7 +2283,7 @@ public class InterfazYLogica extends javax.swing.JFrame {
         //Obteniendo las llaves del hmap
         List keysAUX = new ArrayList(hmapNVBDouble.keySet());
         //Ordenando variables básicas
-        Collections.sort(keys);//Aqui ya esta ordenadas
+        Collections.sort(keysAUX);//Aqui ya esta ordenadas
         for (int i = 0; i < hmapNVBDouble.size(); i++) {
             if (hmapNVBDouble.get((int) keysAUX.get(i)) != 0.0) {
                 hmapNVBDouble.remove((int) keys.get(i));
@@ -2292,10 +2292,12 @@ public class InterfazYLogica extends javax.swing.JFrame {
 
         keysAUX.removeAll(keysAUX);
         keysAUX = new ArrayList(hmapNVBDouble.keySet());
+        Collections.sort(keysAUX);//Aqui ya esta ordenadas
         for (int i = 0; i < hmapNVBDouble.size(); i++) {
             if (hmapNVBDouble.get((int) keysAUX.get(i)) == 0.0) {
                 solMultiple.setEnabled(true);
                 solMultiple.setVisible(true);
+                break;
             } else {
                 //Si no es cero, entonces no se muestra el boton, y se cierra este bucle
                 System.out.println("NO EXISTEN SOLUCIONES MÚLTIPLES");
